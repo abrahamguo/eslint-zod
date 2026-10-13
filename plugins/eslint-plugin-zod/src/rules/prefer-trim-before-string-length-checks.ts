@@ -1,6 +1,7 @@
-import { findParentSchemaMatchingCondition, zodImportScope } from '@eslint-zod/utils';
+import { zodImportScope } from '@eslint-zod/utils';
 
 import { createZodPluginRule } from '../utils/create-plugin-rule.js';
+import { isRecordKeySchema } from '../utils/is-record-key-schema.js';
 
 const LENGTH_CHECK_METHODS = ['min', 'max', 'length'];
 
@@ -28,14 +29,7 @@ export const preferTrimBeforeStringLengthChecks = createZodPluginRule({
     return createSchemaVisitor({
       schemaType: 'string',
       onSchema(node, zodSchemaMeta): void {
-        // Skip string schema used as record key — trim on record keys causes data loss
-        if (
-          findParentSchemaMatchingCondition(node, {
-            schemaName: 'record',
-            condition: (callParent) =>
-              callParent.arguments.length > 0 && callParent.arguments[0] === node,
-          })
-        ) {
+        if (isRecordKeySchema(node)) {
           return;
         }
 
