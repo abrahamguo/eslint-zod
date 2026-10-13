@@ -52,6 +52,8 @@ z.strictObject({ name: z.string() });
 The fix is withheld when a method that sets the unknown-key behaviour (`.catchall()`, `.merge()`, `.strict()`, `.strip()`, `.passthrough()`, `.loose()`) sits between `z.object()` and `.loose()`:
 hoisting `.loose()` into the factory would let that method override it.
 
+It is also withheld when `.loose()` is called after a property access (`z.object({ a: z.object({}) }).shape.a.loose()`), where the factory to rename is out of reach.
+
 ## Conflict with `zod/consistent-object-schema-type`
 
 If you are using the `zod/consistent-object-schema-type` rule alongside this one, be aware that there can be a conflict if `consistent-object-schema-type` is configured to only allow `object` (which is its default behavior).

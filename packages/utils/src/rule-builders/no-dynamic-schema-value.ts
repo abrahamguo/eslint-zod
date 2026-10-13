@@ -3,6 +3,8 @@ import { AST_NODE_TYPES } from '@typescript-eslint/types';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 import { findVariable } from '@typescript-eslint/utils/ast-utils';
 
+import { getZodChainedMethodNames } from '../get-zod-chained-method-names.js';
+import { isZodFactoryChainItem } from '../is-zod-factory-chain-item.js';
 import type { ZodImportScope } from '../zod-import-scope.js';
 import { isZodNonSchemaHelperCall } from '../zod-non-schema-helper-names.js';
 import { ZOD_NON_SCHEMA_PRODUCING_METHODS } from '../zod-non-schema-producing-methods.js';
@@ -139,11 +141,18 @@ export function buildNoDynamicSchemaValueCreate(
         const chain = collectZodChainMethods(node);
         // Empty on a computed member (`z['string']()`) — collectZodChainMethods is all-or-nothing,
         // so fall back to the one call we know about.
-        // `.parse(input)` and its kin end the schema: their arguments are runtime values by design.
-        const end = chain.findIndex(
-          (item, index) => index > 0 && ZOD_NON_SCHEMA_PRODUCING_METHODS.includes(item.name),
-        );
-        const schemaChain = end === -1 ? chain : chain.slice(0, end);
+        // `.parse(input)` and its kin end the schema: from there on, arguments are runtime values.
+        // Only a method counts: `z.codec(…)` is a factory that list names too.
+        const names = getZodChainedMethodNames(meta);
+        const end = names.findIndex((name) => ZOD_NON_SCHEMA_PRODUCING_METHODS.includes(name));
+        // The chain may resume after a property access (`….parse(x).tags.split(sep)`),
+        // so its methods are the last ones named.
+        const chainedItems = chain.filter((item) => !isZodFactoryChainItem(item));
+        const offset = names.length - chainedItems.length;
+        const schemaChain = chain.filter((item) => {
+          const position = chainedItems.indexOf(item);
+          return position === -1 || end === -1 || offset + position < end;
+        });
         const calls = chain.length > 0 ? schemaChain.map((item) => item.node) : [node];
 
         for (const call of calls) {

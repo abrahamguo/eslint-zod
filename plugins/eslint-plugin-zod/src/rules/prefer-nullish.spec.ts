@@ -49,6 +49,13 @@ ruleTester.run(preferNullish.name, preferNullish, {
         string().optional().nullable();
       `,
     },
+    {
+      name: 'nullable passed to a method called after a property access',
+      code: dedent`
+        import * as z from 'zod';
+        z.optional(z.string()).def.innerType.or(z.nullable(z.string()));
+      `,
+    },
   ],
   invalid: [
     {

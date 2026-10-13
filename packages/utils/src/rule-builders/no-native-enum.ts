@@ -1,5 +1,6 @@
 import type { TSESLint } from '@typescript-eslint/utils';
 
+import { isZodFactoryChainItem } from '../is-zod-factory-chain-item.js';
 import type { ZodImportScope } from '../zod-import-scope.js';
 
 type MessageIds = 'useEnum';
@@ -19,9 +20,11 @@ export function buildNoNativeEnumCreate(
     return createSchemaVisitor({
       schemaType: 'nativeEnum',
       onSchema(node): void {
-        // Empty for a computed factory (`z['nativeEnum'](Foo)`), which detection still resolves —
+        // Empty for a computed factory (`z['nativeEnum'](Foo)`), which detection still resolves,
+        // and resumed at a method after a property access (`z.nativeEnum(Foo).options.map(…)`) —
         // report it, just without a fix.
-        const factoryCallee = collectZodChainMethods(node).at(0)?.member;
+        const head = collectZodChainMethods(node).at(0);
+        const factoryCallee = head && isZodFactoryChainItem(head) ? head.member : null;
 
         context.report({
           node,

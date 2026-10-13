@@ -149,5 +149,14 @@ ruleTester.run(preferStringSchemaWithTrim.name, preferStringSchemaWithTrim, {
       errors: [{ messageId: 'addTrim' }],
       output: null,
     },
+    {
+      name: 'method called on a parse result — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        z.string().safeParse(input).data?.toUpperCase();
+      `,
+      errors: [{ messageId: 'addTrim' }],
+      output: null,
+    },
   ],
 });

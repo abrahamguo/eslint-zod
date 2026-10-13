@@ -100,6 +100,13 @@ ruleTester.run(noTransformInRecordKey.name, noTransformInRecordKey, {
         const config = z.record(z.string().check(trimCheck), z.unknown());
       `,
     },
+    {
+      name: 'transform in a check added to the key schema of a record',
+      code: dedent`
+        import * as z from 'zod/mini';
+        z.record(z.string(), z.number()).def.keyType.check(z.trim());
+      `,
+    },
   ],
   invalid: [
     {
@@ -227,6 +234,14 @@ ruleTester.run(noTransformInRecordKey.name, noTransformInRecordKey, {
         z.looseRecord(z.string().check(z.trim()), z.number());
       `,
       errors: [{ messageId: 'noTransformInRecordKey' }, { messageId: 'noTransformInRecordKey' }],
+    },
+    {
+      name: 'mutating check added first to a key reached through a property access',
+      code: dedent`
+        import * as z from 'zod/mini';
+        z.record(z.object({ key: z.string() }).shape.key.check(z.trim()), z.number());
+      `,
+      errors: [{ messageId: 'noTransformInRecordKey' }],
     },
   ],
 });

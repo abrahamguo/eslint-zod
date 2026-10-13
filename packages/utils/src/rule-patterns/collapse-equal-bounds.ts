@@ -6,6 +6,7 @@ import type { ZodSchemaConstraint } from '../collect-zod-schema-constraints.js';
 import type { ZodSchemaBaseType } from '../get-zod-schema-base-type.js';
 import { getZodSchemaBaseType } from '../get-zod-schema-base-type.js';
 import { hasCommentInRange } from '../has-comment-in-range.js';
+import { isZodFactoryChainItem } from '../is-zod-factory-chain-item.js';
 import { readIntegerLiteralValue } from '../read-integer-literal-value.js';
 import type { ZodCheckDomain } from '../zod-check-vocabulary.js';
 import { canonicalizeZodConstraintName, getZodCheckDescriptor } from '../zod-check-vocabulary.js';
@@ -131,7 +132,7 @@ function buildBoundRemoveFix(opts: {
  * Stays silent — rather than reporting unfixably —
  * whenever the pair is not provably the exact check: a non-literal or error-message argument,
  * a bound with its value baked in (`nonempty`), a mutating or opaque check between the two,
- * a type-changing method before the second bound,
+ * a type-changing method before the second bound, a chain resumed after a property access,
  * or more bounds than a single pair.
  * Those belong to `no-conflicting-checks`.
  */
@@ -153,6 +154,12 @@ export function buildCollapseEqualBoundsCreate<TMessageIds extends string>(
       onSchema(node, zodSchemaMeta): void {
         const baseType = getZodSchemaBaseType(zodSchemaMeta.schemaType);
         if (baseType === null || !baseTypes.includes(baseType)) {
+          return;
+        }
+
+        // After a property access (`z.set(x).def.valueType.min(3).max(3)`) the bounds are another schema's.
+        const head = collectZodChainMethods(node).at(0);
+        if (head && !isZodFactoryChainItem(head)) {
           return;
         }
 

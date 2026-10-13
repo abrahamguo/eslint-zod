@@ -230,6 +230,13 @@ ruleTester.run(noConflictingChecks.name, noConflictingChecks, {
         z.string().check(iso());
       `,
     },
+    {
+      name: 'checks on a schema reached through a property access',
+      code: dedent`
+        import * as z from 'zod/mini';
+        z.array(z.string()).def.element.check(z.trim()).check(z.email());
+      `,
+    },
   ],
   invalid: [
     {

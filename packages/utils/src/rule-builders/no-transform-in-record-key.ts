@@ -1,6 +1,7 @@
 import { AST_NODE_TYPES } from '@typescript-eslint/types';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 
+import { isZodFactoryChainItem } from '../is-zod-factory-chain-item.js';
 import type { ZodImportScope } from '../zod-import-scope.js';
 
 type MessageIds = 'noTransformInRecordKey';
@@ -56,7 +57,12 @@ export function buildNoTransformInRecordKeyCreate(
       schemaType: ['record', 'partialRecord', 'looseRecord'],
       onSchema(node): void {
         // `node` is the outermost call, which is not the `record()` one once something is chained on it.
-        const recordCall = collectZodChainMethods(node).at(0)?.node ?? node;
+        const head = collectZodChainMethods(node).at(0);
+        // After a property access (`z.record(k, v).keyType.or(…)`) the chain is not the record's.
+        if (head && !isZodFactoryChainItem(head)) {
+          return;
+        }
+        const recordCall = head?.node ?? node;
         const keySchema = recordCall.arguments.at(0);
 
         if (keySchema?.type !== AST_NODE_TYPES.CallExpression) {

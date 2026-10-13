@@ -78,8 +78,10 @@ z.enum(Color).optional();
 Autofix is **not applied** when:
 
 - The schema is called via a named import (e.g. `import { nativeEnum } from 'zod'`)
+- The factory is accessed with a computed member (e.g. `z['nativeEnum'](Color)`)
+- A method is called after a property access (e.g. `z.nativeEnum(Color).options.map(…)`)
 
-In these cases, the rule still reports the violation but will not modify the code, since the import declaration must also be updated.
+In these cases, the rule still reports the violation but will not modify the code.
 
 ## When Not To Use It
 

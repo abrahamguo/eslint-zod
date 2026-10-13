@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import { collectZodSchemaConstraints } from './collect-zod-schema-constraints.js';
 import type { ZodSchemaMeta } from './detect-zod-schema-root-node.js';
+import type { ZodChainMember } from './track-zod-schema-imports.js';
 
 // --- minimal AST mock helpers ---
 
@@ -84,6 +85,29 @@ describe('collectZodSchemaConstraints', () => {
       { name: 'min', node: methods[1].node, origin: 'chained', chainIndex: 1 },
       { name: 'max', node: methods[2].node, origin: 'chained', chainIndex: 2 },
     ]);
+  });
+
+  it('keeps the first call of a chain resumed after a property access', () => {
+    // z.object({ a: z.string() }).shape.a.trim().min(2) — the walk starts at `.trim()`
+    const afterProperty = {
+      object: {
+        type: AST_NODE_TYPES.MemberExpression,
+        object: { type: AST_NODE_TYPES.CallExpression },
+      },
+    } as unknown as ZodChainMember;
+    const methods = [{ ...makeChainItem('trim'), member: afterProperty }, makeChainItem('min')];
+
+    const constraints = collectZodSchemaConstraints({
+      methods,
+      detectZodSchemaRootNode: makeDetector(),
+    });
+
+    expect(constraints.map((constraint) => [constraint.name, constraint.chainIndex])).toStrictEqual(
+      [
+        ['trim', 0],
+        ['min', 1],
+      ],
+    );
   });
 
   it('expands `.check(...)` arguments into check-argument constraints', () => {

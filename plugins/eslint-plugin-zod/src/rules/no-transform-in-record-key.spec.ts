@@ -161,6 +161,13 @@ ruleTester.run(noTransformInRecordKey.name, noTransformInRecordKey, {
         const config = z.record();
       `,
     },
+    {
+      name: 'transform in a method called on the key schema of a record',
+      code: dedent`
+        import * as z from 'zod';
+        z.record(z.string(), z.number()).keyType.or(z.string().transform((value) => value));
+      `,
+    },
   ],
   invalid: [
     {
@@ -365,6 +372,14 @@ ruleTester.run(noTransformInRecordKey.name, noTransformInRecordKey, {
         z.looseRecord(z.string().trim(), z.number());
       `,
       errors: [{ messageId: 'noTransformInRecordKey' }, { messageId: 'noTransformInRecordKey' }],
+    },
+    {
+      name: 'transform called first on a key reached through a property access',
+      code: dedent`
+        import * as z from 'zod';
+        z.record(z.object({ key: z.string() }).shape.key.trim(), z.number());
+      `,
+      errors: [{ messageId: 'noTransformInRecordKey' }],
     },
   ],
 });

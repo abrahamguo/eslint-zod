@@ -1,6 +1,7 @@
 import { AST_NODE_TYPES } from '@typescript-eslint/types';
 import type { TSESLint } from '@typescript-eslint/utils';
 
+import { isZodFactoryChainItem } from '../is-zod-factory-chain-item.js';
 import type { ZodImportScope } from '../zod-import-scope.js';
 
 type MessageIds = 'noCoerceBoolean' | 'useStringbool';
@@ -28,9 +29,11 @@ export function buildNoCoerceBooleanCreate(
         // the dedicated string→boolean codec that maps `"true"`/`"false"` (and similar pairs) explicitly.
         // This is only offered for the namespace form,
         // since the named `coerce.boolean()` form would require introducing a `stringbool` import.
-        // Empty for a computed factory (`z.coerce['boolean']()`), which detection still resolves —
+        // Empty for a computed factory (`z.coerce['boolean']()`), which detection still resolves,
+        // and resumed at a method after a property access (`z.coerce.boolean().def.type.toString()`) —
         // report it, just without the suggestion.
-        const factoryCallee = collectZodChainMethods(node).at(0)?.member;
+        const head = collectZodChainMethods(node).at(0);
+        const factoryCallee = head && isZodFactoryChainItem(head) ? head.member : null;
 
         if (
           zodSchemaMeta.schemaDecl !== 'namespace' ||

@@ -137,6 +137,28 @@ ruleTester.run(noDynamicSchemaValue.name, noDynamicSchemaValue, {
         z.globalRegistry.add(userSchema, { id: makeId() });
       `,
     },
+    {
+      name: 'input parsed by a schema reached through a property access',
+      code: dedent`
+        import * as z from 'zod/mini';
+        const user = z.object({ name: z.string() });
+        function parseName(input: unknown) {
+          return user.shape.name.parse(input);
+        }
+        function parseInline(input: unknown) {
+          return z.object({ name: z.string() }).shape.name.parse(input);
+        }
+      `,
+    },
+    {
+      name: 'method called on a parse result',
+      code: dedent`
+        import * as z from 'zod/mini';
+        function readTags(body: unknown, separator: string) {
+          return z.object({ tags: z.string() }).parse(body).tags.split(separator);
+        }
+      `,
+    },
   ],
 
   invalid: [

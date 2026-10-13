@@ -42,6 +42,13 @@ ruleTester.run(preferTupleOverArrayLength.name, preferTupleOverArrayLength, {
         array(string()).check(length(2))
       `,
     },
+    {
+      name: 'length check on a schema reached through a property access',
+      code: dedent`
+        import * as z from 'zod/mini';
+        z.array(z.string()).def.element.check(z.trim()).check(z.length(2));
+      `,
+    },
   ],
   invalid: [
     {

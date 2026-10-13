@@ -3,6 +3,7 @@ import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 
 import { buildZodConstraintsRemoveFix } from '../build-zod-constraints-remove-fix.js';
 import type { ZodSchemaConstraint } from '../collect-zod-schema-constraints.js';
+import { isZodFactoryChainItem } from '../is-zod-factory-chain-item.js';
 import { readIntegerLiteralValue } from '../read-integer-literal-value.js';
 import { readsZodSchemaProperty } from '../reads-zod-schema-property.js';
 import { canonicalizeZodConstraintName } from '../zod-check-vocabulary.js';
@@ -57,6 +58,12 @@ export function buildPreferTupleOverArrayLengthCreate(
       schemaType: 'array',
       onSchema(node, zodSchemaMeta): void {
         const methods = collectZodChainMethods(node);
+        // After a property access (`z.array(x).element.length(2)`) the checks are another schema's.
+        const head = methods.at(0);
+        if (head && !isZodFactoryChainItem(head)) {
+          return;
+        }
+
         const allConstraints = collectZodSchemaConstraints(node);
         // `z.array(x).array().min(2)`: past a type-changing method the checks bound another schema.
         const typeChangeAt = allConstraints.findIndex(

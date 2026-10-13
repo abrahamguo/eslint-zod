@@ -4,6 +4,7 @@ import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 import { buildZodWrapperUnwrapFix } from '../build-zod-wrapper-unwrap-fix.js';
 import type { ZodSchemaMeta } from '../detect-zod-schema-root-node.js';
 import { hasCommentInRange } from '../has-comment-in-range.js';
+import { isZodFactoryChainItem } from '../is-zod-factory-chain-item.js';
 import { readsZodSchemaProperty } from '../reads-zod-schema-property.js';
 import type { ZodChainItem } from '../track-zod-schema-imports.js';
 import type { ZodImportScope } from '../zod-import-scope.js';
@@ -70,8 +71,8 @@ export function buildPreferNullishCreate(
     /** Wrapper form (`zod/mini`): `z.optional(z.nullable(inner))`. */
     function handleWrapper(node: TSESTree.CallExpression, meta: ZodSchemaMeta): void {
       const wrapper = collectZodChainMethods(node).at(0);
-      // The leftmost chain item is the factory call itself; guard extra args.
-      if (wrapper?.node.arguments.length !== 1) {
+      // The head is the wrapper call unless the chain resumes after a property access; guard extra args.
+      if (!wrapper || !isZodFactoryChainItem(wrapper) || wrapper.node.arguments.length !== 1) {
         return;
       }
       const wrapperCall = wrapper.node;

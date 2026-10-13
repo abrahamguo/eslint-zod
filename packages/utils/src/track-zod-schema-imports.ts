@@ -162,12 +162,12 @@ export interface ZodSchemaImportTracker {
    * while `methods` also covers computed members (`z['uuid']()`).
    *
    * The result is all-or-nothing:
-   * either every call from the factory to the outermost one is named —
-   * so `chain[0]` is the factory and `chain[i]` lines up with `collectZodSchemaConstraints`' `chainIndex` —
+   * either every call from the start of the chain to the outermost one is named —
+   * so `chain[i]` lines up with `collectZodSchemaConstraints`' `chainIndex` —
    * or the array is empty.
    * It is never a partial chain missing its leading calls.
    *
-   * The walk stops at a property access:
+   * The chain starts at the factory unless a property access precedes it, where the walk stops:
    * `z.object({…}).shape.a.optional()` gives `[optional]`, so `chain[0]` is not the factory there.
    *
    * Returns an empty array if the expression isn't a navigable zod chain,
@@ -288,7 +288,7 @@ export function trackZodSchemaImports(
       // Detection still resolves those (`detectZodSchemaRootNode` reads literal keys),
       // so returning what we walked so far would hand callers a chain that silently drops leading methods and no longer starts at the factory.
       // Return nothing instead,
-      // so `chain[0]` is always the factory and `chain[i]` always lines up with the constraint list.
+      // so a chain never misses its leading calls and `chain[i]` always lines up with the constraint list.
       const unwalkable: Array<ZodChainItem> = [];
       chainCache.set(node, unwalkable);
       return unwalkable;

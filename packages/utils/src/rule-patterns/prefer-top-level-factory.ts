@@ -1,6 +1,7 @@
 import type { TSESLint } from '@typescript-eslint/utils';
 
 import { buildZodChainReplacementFix } from '../build-zod-chain-replacement-fix.js';
+import { isZodFactoryChainItem } from '../is-zod-factory-chain-item.js';
 import type { ZodImportScope } from '../zod-import-scope.js';
 import { ZOD_MUTATING_CHECK_NAMES } from '../zod-mutating-check-names.js';
 import { ZOD_TYPE_CHANGING_METHODS } from '../zod-type-changing-methods.js';
@@ -78,7 +79,7 @@ export function buildPreferTopLevelFactoryCreate<
 
         // A chain that does not start at the factory resumes after a property access
         // (`z.string().foo.email()`), so its methods are not chained on `<factoryName>()`.
-        if (found.methods.length > 0 && found.methods[0].name !== factoryName) {
+        if (found.methods.length > 0 && !isZodFactoryChainItem(found.methods[0])) {
           return;
         }
 

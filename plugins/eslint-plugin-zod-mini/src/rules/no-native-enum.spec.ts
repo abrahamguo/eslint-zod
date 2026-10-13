@@ -109,5 +109,14 @@ ruleTester.run(noNativeEnum.name, noNativeEnum, {
       errors: [{ messageId: 'useEnum' }],
       output: null,
     },
+    {
+      name: 'method called after a property access — reported but not fixed',
+      code: dedent`
+        import * as z from 'zod/mini';
+        z.nativeEnum(Color).options.map((value) => value);
+      `,
+      errors: [{ messageId: 'useEnum' }],
+      output: null,
+    },
   ],
 });

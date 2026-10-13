@@ -2,6 +2,8 @@ import { AST_NODE_TYPES } from '@typescript-eslint/types';
 import type { TSESTree } from '@typescript-eslint/utils';
 
 import type { ZodSchemaMeta } from './detect-zod-schema-root-node.js';
+import { isZodFactoryChainItem } from './is-zod-factory-chain-item.js';
+import type { ZodChainItem } from './track-zod-schema-imports.js';
 
 interface ZodSchemaConstraintBase {
   /**
@@ -70,8 +72,8 @@ export type ZodSchemaConstraint = ZodChainedConstraint | ZodCheckArgumentConstra
  * which supplies the chain and the detector.
  */
 export function collectZodSchemaConstraints(opts: {
-  /** Chain items from `collectZodChainMethods`, factory first. */
-  methods: Array<{ name: string; node: TSESTree.CallExpression }>;
+  /** Chain items from `collectZodChainMethods`; an item without `member` counts as a factory. */
+  methods: Array<Pick<ZodChainItem, 'name' | 'node'> & Partial<Pick<ZodChainItem, 'member'>>>;
 
   /** Detector bound to the file's imports (see `detectZodSchemaRootNode`). */
   detectZodSchemaRootNode: (node: TSESTree.Node) => ZodSchemaMeta | null;
@@ -81,8 +83,9 @@ export function collectZodSchemaConstraints(opts: {
   const constraints: Array<ZodSchemaConstraint> = [];
 
   for (const [chainIndex, method] of methods.entries()) {
-    // Index 0 is the schema factory (or wrapper), not a constraint.
-    if (chainIndex === 0) {
+    // Index 0 is the schema factory (or wrapper), not a constraint —
+    // unless the chain resumes after a property access (`z.object({…}).shape.a.trim()`).
+    if (chainIndex === 0 && isZodFactoryChainItem({ member: method.member ?? null })) {
       continue;
     }
 

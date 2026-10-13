@@ -63,6 +63,20 @@ ruleTester.run(noUnnecessaryReadonly.name, noUnnecessaryReadonly, {
         z['string']().transform((s) => [s]).readonly();
       `,
     },
+    {
+      name: 'readonly on a schema reached through a property access',
+      code: dedent`
+        import * as z from 'zod';
+        z.string().transform((value) => value.split(',')).pipe(z.array(z.string())).out.min(1).readonly();
+      `,
+    },
+    {
+      name: 'method called on the schema inside a readonly wrapper',
+      code: dedent`
+        import * as z from 'zod';
+        z.readonly(z.array(z.string())).def.innerType.or(z.string());
+      `,
+    },
   ],
   invalid: [
     {

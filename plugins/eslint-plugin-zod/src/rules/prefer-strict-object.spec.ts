@@ -43,6 +43,13 @@ ruleTester.run(preferStrictObject.name, preferStrictObject, {
         schema.strict();
       `,
     },
+    {
+      name: 'property named like the modifier',
+      code: dedent`
+        import * as z from 'zod';
+        z.object({ strict: z.boolean() }).shape.strict.optional();
+      `,
+    },
   ],
   invalid: [
     {
@@ -114,6 +121,16 @@ ruleTester.run(preferStrictObject.name, preferStrictObject, {
         z.object({ a: z.string() }).catchall(z.string()).strict();
       `,
       errors: [{ messageId: 'preferStrictObject' }],
+      output: null,
+    },
+    {
+      name: 'modifier called after a property access — reported without a fix, and must not crash',
+      code: dedent`
+        import * as z from 'zod';
+        z.object({ a: z.object({ b: z.string() }) }).shape.a.strict();
+        z.object({ a: z.object({ b: z.string() }) }).shape.a.partial().strict();
+      `,
+      errors: [{ messageId: 'preferStrictObject' }, { messageId: 'preferStrictObject' }],
       output: null,
     },
   ],

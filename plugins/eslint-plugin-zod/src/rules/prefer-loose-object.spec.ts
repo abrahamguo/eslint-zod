@@ -51,6 +51,13 @@ ruleTester.run(preferLooseObject.name, preferLooseObject, {
         schema.loose();
       `,
     },
+    {
+      name: 'property named like the modifier',
+      code: dedent`
+        import * as z from 'zod';
+        z.object({ loose: z.boolean() }).shape.loose.optional();
+      `,
+    },
   ],
   invalid: [
     {
@@ -175,6 +182,16 @@ ruleTester.run(preferLooseObject.name, preferLooseObject, {
         z.object({ a: z.string() }).catchall(z.string()).loose();
       `,
       errors: [{ messageId: 'preferLooseObject' }],
+      output: null,
+    },
+    {
+      name: 'modifier called after a property access — reported without a fix, and must not crash',
+      code: dedent`
+        import * as z from 'zod';
+        z.object({ a: z.object({ b: z.string() }) }).shape.a.passthrough();
+        z.object({ a: z.object({ b: z.string() }) }).shape.a.partial().passthrough();
+      `,
+      errors: [{ messageId: 'preferLooseObject' }, { messageId: 'preferLooseObject' }],
       output: null,
     },
   ],

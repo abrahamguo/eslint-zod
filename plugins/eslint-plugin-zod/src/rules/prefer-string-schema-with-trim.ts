@@ -1,4 +1,5 @@
 import { zodImportScope } from '@eslint-zod/utils';
+import { AST_NODE_TYPES } from '@typescript-eslint/types';
 
 import { createZodPluginRule } from '../utils/create-plugin-rule.js';
 import { isRecordKeySchema } from '../utils/is-record-key-schema.js';
@@ -39,10 +40,14 @@ export const preferStringSchemaWithTrim = createZodPluginRule({
           node,
           messageId: 'addTrim',
           fix(fixer) {
-            // Empty for a computed factory (`z['string']()`), which detection still resolves —
+            // Empty for a computed factory (`z['string']()`), which detection still resolves,
+            // and resumed at a later call after a property access (`z.string().safeParse(x).data.at(0)`) —
             // report it, just without a fix.
             const factoryCall = methods.at(0);
-            if (zodSchemaMeta.schemaDecl === 'named' || !factoryCall) {
+            if (
+              zodSchemaMeta.schemaDecl === 'named' ||
+              factoryCall?.member?.object.type !== AST_NODE_TYPES.Identifier
+            ) {
               return null;
             }
 

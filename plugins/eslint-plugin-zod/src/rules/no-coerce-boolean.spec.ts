@@ -140,5 +140,12 @@ ruleTester.run(noCoerceBoolean.name, noCoerceBoolean, {
         z.coerce['boolean']();
       `,
     ),
+    report(
+      'method called after a property access — reported without a suggestion',
+      dedent`
+        import * as z from 'zod';
+        z.coerce.boolean().safeParse(input).success.toString();
+      `,
+    ),
   ],
 });

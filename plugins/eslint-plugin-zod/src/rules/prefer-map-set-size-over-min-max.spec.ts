@@ -99,6 +99,13 @@ ruleTester.run(preferMapSetSizeOverMinMax.name, preferMapSetSizeOverMinMax, {
         set(string()).min(3).max(3)
       `,
     },
+    {
+      name: 'bounds on a schema reached through a property access',
+      code: dedent`
+        import * as z from 'zod';
+        z.set(z.string()).def.valueType.trim().min(3).max(3);
+      `,
+    },
   ],
   invalid: [
     {
