@@ -119,6 +119,9 @@ export const arrayStyle = createZodPluginRule<[Options], MessageIds>({
         const arrayMethod = methods.find(
           (it) =>
             it.name === 'array' &&
+            // a bare `array()` or `z.array()` is the factory, not the method
+            it.member !== null &&
+            it.member.object.type !== AST_NODE_TYPES.Identifier &&
             // if there is a param the array has already a schema inside
             it.node.arguments.length === 0,
         );
