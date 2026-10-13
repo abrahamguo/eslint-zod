@@ -8,6 +8,13 @@ const ruleTester = new RuleTester();
 ruleTester.run(requireErrorMessage.name, requireErrorMessage, {
   valid: [
     {
+      name: 'quoted error key',
+      code: dedent`
+        import * as z from 'zod';
+        z.string().refine(() => true, { "error": "hello" });
+      `,
+    },
+    {
       name: 'object with error property (namespace import)',
       code: dedent`
         import * as z from 'zod';
@@ -298,6 +305,39 @@ ruleTester.run(`${requireErrorMessage.name} (object)`, requireErrorMessage, {
         foo: z.string().refine(() => true, {  error: "hello" })
       });
       `,
+    },
+    {
+      name: 'shorthand message property — the fix keeps reading the same variable',
+      code: dedent`
+        import * as z from 'zod';
+        z.string().refine(() => true, { message });
+      `,
+      errors: [{ messageId: 'preferError' }],
+      output: dedent`
+        import * as z from 'zod';
+        z.string().refine(() => true, { error: message });
+      `,
+    },
+    {
+      name: 'computed string key — the fix keeps the key a string',
+      code: dedent`
+        import * as z from 'zod';
+        z.string().refine(() => true, { ['message']: 'hello' });
+      `,
+      errors: [{ messageId: 'preferError' }],
+      output: dedent`
+        import * as z from 'zod';
+        z.string().refine(() => true, { ['error']: 'hello' });
+      `,
+    },
+    {
+      name: 'computed key is not the message property',
+      code: dedent`
+        import * as z from 'zod';
+        z.string().refine(() => true, { [message]: 'hello' });
+      `,
+      errors: [{ messageId: 'requireErrorMessage' }],
+      output: null,
     },
   ],
 });

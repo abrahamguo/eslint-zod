@@ -1,6 +1,7 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
+import { getStaticPropertyName } from '../get-static-property-name.js';
 import type { ZodImportScope } from '../zod-import-scope.js';
 
 type MessageIds = 'requireErrorMessage' | 'preferError' | 'removeMessage';
@@ -50,15 +51,14 @@ export function buildRequireErrorMessageCreate(
           let errorPropertyNode: TSESTree.Property | undefined;
           let messagePropertyNode: TSESTree.Property | undefined;
           for (const property of params.properties) {
-            if (
-              property.type === AST_NODE_TYPES.Property &&
-              property.key.type === AST_NODE_TYPES.Identifier
-            ) {
-              if (property.key.name === 'error') {
+            if (property.type === AST_NODE_TYPES.Property) {
+              const keyName = getStaticPropertyName(property);
+
+              if (keyName === 'error') {
                 errorPropertyNode = property;
               }
 
-              if (property.key.name === 'message') {
+              if (keyName === 'message') {
                 messagePropertyNode = property;
               }
 
@@ -93,7 +93,15 @@ export function buildRequireErrorMessageCreate(
               messageId: 'preferError',
               node: params,
               fix(fixer) {
-                return fixer.replaceTextRange(messagePropertyNode.key.range, 'error');
+                // Renaming the key of a shorthand would rename the variable it reads.
+                if (messagePropertyNode.shorthand) {
+                  return fixer.insertTextBefore(messagePropertyNode, 'error: ');
+                }
+                // Inside brackets (`['message']`) a bare name would be a reference.
+                return fixer.replaceText(
+                  messagePropertyNode.key,
+                  messagePropertyNode.computed ? "'error'" : 'error',
+                );
               },
             });
             continue;
