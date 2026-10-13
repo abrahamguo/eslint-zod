@@ -583,5 +583,21 @@ ruleTester.run(noConflictingChecks.name, noConflictingChecks, {
       `,
       errors: [{ messageId: 'redundantCheck' }],
     },
+    {
+      name: 'empty range between negative bounds',
+      code: dedent`
+        import * as z from 'zod';
+        z.number().min(-5).max(-10);
+      `,
+      errors: [{ messageId: 'impossibleCase' }],
+    },
+    {
+      name: 'length that an iso format can never have',
+      code: dedent`
+        import * as z from 'zod';
+        z.iso.date().length(5);
+      `,
+      errors: [{ messageId: 'impossibleCase' }],
+    },
   ],
 });

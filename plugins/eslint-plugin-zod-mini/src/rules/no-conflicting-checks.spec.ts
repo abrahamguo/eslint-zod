@@ -750,5 +750,13 @@ ruleTester.run(noConflictingChecks.name, noConflictingChecks, {
       `,
       errors: [{ messageId: 'impossibleCase' }],
     },
+    {
+      name: 'empty range between negative bounds',
+      code: dedent`
+        import * as z from 'zod/mini';
+        z.number().check(z.gte(-5), z.lte(-10));
+      `,
+      errors: [{ messageId: 'impossibleCase' }],
+    },
   ],
 });

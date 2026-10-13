@@ -267,6 +267,17 @@ export function buildNoConflictingChecksCreate(
 
     function readLiteralArgument(node: TSESTree.CallExpression): LiteralValue | undefined {
       const argument = node.arguments.at(0);
+      // `-5` parses as a unary expression around the literal `5`.
+      if (
+        argument?.type === AST_NODE_TYPES.UnaryExpression &&
+        argument.operator === '-' &&
+        argument.argument.type === AST_NODE_TYPES.Literal
+      ) {
+        const { value: magnitude } = argument.argument;
+        return typeof magnitude === 'number' || typeof magnitude === 'bigint'
+          ? -magnitude
+          : undefined;
+      }
       if (argument?.type !== AST_NODE_TYPES.Literal) {
         return undefined;
       }
@@ -638,13 +649,16 @@ export function buildNoConflictingChecksCreate(
         const segmentStarts = [0];
 
         // A string-format factory (`z.uuid()`, `z.email()`, …) behaves like a format check applied to a string schema.
-        const baseDescriptor = getZodCheckDescriptor(zodSchemaMeta.schemaType);
+        // `z.iso.date()` detects as `iso`; the format is the member called on it.
+        const baseName =
+          zodSchemaMeta.schemaType === 'iso' ? `iso.${chain[0].name}` : zodSchemaMeta.schemaType;
+        const baseDescriptor = getZodCheckDescriptor(baseName);
         if (baseDescriptor?.format) {
           checks.push({
-            canonical: zodSchemaMeta.schemaType,
+            canonical: baseName,
             descriptor: baseDescriptor,
             node: chain[0].node,
-            rawName: zodSchemaMeta.schemaType,
+            rawName: baseName,
             index: 0,
             origin: 'chained',
           });
@@ -669,7 +683,8 @@ export function buildNoConflictingChecksCreate(
             canonical,
             descriptor,
             node: constraint.node,
-            rawName: constraint.name,
+            // an `iso.*` check argument detects as `iso` too
+            rawName: constraint.name === 'iso' ? canonical : constraint.name,
             literalValue: readLiteralArgument(constraint.node),
             index: index + 1,
             origin: constraint.origin,
