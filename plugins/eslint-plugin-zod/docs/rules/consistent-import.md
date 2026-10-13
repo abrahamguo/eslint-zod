@@ -59,9 +59,10 @@ The default is `namespace`, as it avoids named import collisions and makes usage
 ([#409](https://github.com/marcalexiei/eslint-zod/issues/409)):
 
 - The [Zod docs](https://zod.dev/basics) use `import * as z from 'zod'` throughout.
-- It tree-shakes as badly as `named`: Zod's entrypoint does `export { z }; export default z;`, so both
-  are the same materialized namespace object, and only `import * as z` gives the bundler a live
-  namespace binding ([zod#4433](https://github.com/colinhacks/zod/issues/4433#issuecomment-2921500831)).
+- It tree-shakes exactly like `named`.
+  Since Zod 4.5.0 the entrypoint does `export { z, z as default }` ([zod#6384](https://github.com/colinhacks/zod/pull/6384)),
+  so Rollup and Webpack tree-shake both, while esbuild tree-shakes neither;
+  only `import * as z` is also tree-shaken by esbuild ([evanw/esbuild#1420](https://github.com/evanw/esbuild/issues/1420)).
 - `zod/mini`, `zod/v4-mini` and `zod/v4/core` have no default export, so a shared option would have to
   be forked per plugin — for a form with no advantage over `namespace`.
 
