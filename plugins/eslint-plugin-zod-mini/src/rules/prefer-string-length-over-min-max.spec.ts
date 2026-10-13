@@ -8,6 +8,14 @@ const ruleTester = new RuleTester();
 ruleTester.run(preferStringLengthOverMinMax.name, preferStringLengthOverMinMax, {
   valid: [
     {
+      name: 'opaque check between the bounds — it may mutate the value',
+      code: dedent`
+        import * as z from 'zod/mini';
+        const trimIt = z.trim();
+        z.string().check(z.minLength(3), trimIt, z.maxLength(3));
+      `,
+    },
+    {
       name: 'already an exact length',
       code: dedent`
         import * as z from 'zod/mini';

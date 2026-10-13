@@ -10,6 +10,7 @@ import type { ZodCheckDomain } from '../zod-check-vocabulary.js';
 import { canonicalizeZodConstraintName, getZodCheckDescriptor } from '../zod-check-vocabulary.js';
 import type { ZodImportScope } from '../zod-import-scope.js';
 import { ZOD_MUTATING_CHECK_NAMES } from '../zod-mutating-check-names.js';
+import { ZOD_TYPE_CHANGING_METHODS } from '../zod-type-changing-methods.js';
 
 /** Domains with an exact-form check to collapse into; `value` has none. */
 export type CollapsibleBoundDomain = Extract<ZodCheckDomain, 'length' | 'size'>;
@@ -119,7 +120,8 @@ function buildBoundRemoveFix(opts: {
  * so both API styles work from one implementation.
  * Stays silent — rather than reporting unfixably —
  * whenever the pair is not provably the exact check: a non-literal or error-message argument,
- * a bound with its value baked in (`nonempty`), a mutating check between the two,
+ * a bound with its value baked in (`nonempty`), a mutating or opaque check between the two,
+ * a type-changing method before the second bound,
  * or more bounds than a single pair.
  * Those belong to `no-conflicting-checks`.
  */
@@ -152,6 +154,14 @@ export function buildCollapseEqualBoundsCreate<TMessageIds extends string>(
         const mutatingIndexes: Array<number> = [];
 
         for (const [index, constraint] of constraints.entries()) {
+          // `.min(3).array().max(3)`: what follows bounds another schema.
+          if (
+            constraint.origin === 'chained' &&
+            ZOD_TYPE_CHANGING_METHODS.includes(constraint.name)
+          ) {
+            break;
+          }
+
           if (ZOD_MUTATING_CHECK_NAMES.includes(constraint.name)) {
             mutatingIndexes.push(index);
             continue;
@@ -197,6 +207,19 @@ export function buildCollapseEqualBoundsCreate<TMessageIds extends string>(
           (index) => index > firstBound.index && index < secondBound.index,
         );
         if (mutatesBetween) {
+          return;
+        }
+
+        // A `.check(...)` argument that is not a zod call (`trimIt`, a spread) may mutate too.
+        const hasOpaqueCheck = collectZodChainMethods(node).some(
+          (method, chainIndex) =>
+            (method.name === 'check' || method.name === 'with') &&
+            chainIndex >= firstBound.constraint.chainIndex &&
+            chainIndex <= secondBound.constraint.chainIndex &&
+            method.node.arguments.length !==
+              constraints.filter((it) => it.chainIndex === chainIndex).length,
+        );
+        if (hasOpaqueCheck) {
           return;
         }
 
