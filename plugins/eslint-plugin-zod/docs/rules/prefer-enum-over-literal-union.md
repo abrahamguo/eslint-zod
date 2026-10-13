@@ -14,6 +14,9 @@ This rule suggests replacing `z.union([...])` composed exclusively of `z.literal
 
 When all members of a union are string literals, `z.enum()` is the more idiomatic, concise, and intention-revealing Zod construct.
 
+Only a bare `z.literal('value')` counts as a member:
+a literal with a chained method or a params argument has no `z.enum()` equivalent, so such a union is left alone.
+
 ## Why?
 
 Using `z.enum()` instead of a union of literals:

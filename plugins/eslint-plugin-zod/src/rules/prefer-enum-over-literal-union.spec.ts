@@ -8,6 +8,27 @@ const ruleTester = new RuleTester();
 ruleTester.run(preferEnumOverLiteralUnion.name, preferEnumOverLiteralUnion, {
   valid: [
     {
+      name: 'literal with a chained method — its argument is not the member value',
+      code: dedent`
+        import * as z from 'zod';
+        z.union([z.literal('a').describe('first'), z.literal('b')]);
+      `,
+    },
+    {
+      name: 'literal with params',
+      code: dedent`
+        import * as z from 'zod';
+        z.union([z.literal('a', { error: 'e' }), z.literal('b')]);
+      `,
+    },
+    {
+      name: 'empty union',
+      code: dedent`
+        import * as z from 'zod';
+        z.union([]);
+      `,
+    },
+    {
       name: 'namespace import',
       code: dedent`
         import * as z from 'zod';

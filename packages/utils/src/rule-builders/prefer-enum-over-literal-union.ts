@@ -23,7 +23,10 @@ export function buildPreferEnumOverLiteralUnionCreate(
         const unionNode = union.node;
 
         const unionArgument = unionNode.arguments.at(0);
-        if (unionArgument?.type !== AST_NODE_TYPES.ArrayExpression) {
+        if (
+          unionArgument?.type !== AST_NODE_TYPES.ArrayExpression ||
+          unionArgument.elements.length === 0
+        ) {
           return;
         }
 
@@ -41,10 +44,16 @@ export function buildPreferEnumOverLiteralUnionCreate(
             return null;
           }
 
-          // `z.literal()` with no argument is invalid zod but valid JS.
-          const literalArgument = s.arguments.at(0);
+          // Only a bare `literal(value)` maps onto an enum member:
+          // a chained method (`.describe()`) or a params argument would be lost,
+          // and `s` is then that outer call rather than the `literal()` one.
+          if (collectZodChainMethods(s).length !== 1 || s.arguments.length !== 1) {
+            return null;
+          }
+
+          const [literalArgument] = s.arguments;
           if (
-            literalArgument?.type === AST_NODE_TYPES.Literal &&
+            literalArgument.type === AST_NODE_TYPES.Literal &&
             // Literal could be also a number
             typeof literalArgument.value === 'string'
           ) {
