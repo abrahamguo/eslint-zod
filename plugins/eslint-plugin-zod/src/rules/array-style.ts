@@ -1,8 +1,8 @@
 import { zodImportScope } from '@eslint-zod/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import type { TSESTree } from '@typescript-eslint/utils';
 
 import { createZodPluginRule } from '../utils/create-plugin-rule.js';
-import { hasZodRuntimeImportRoot } from '../utils/has-zod-runtime-import-root.js';
 
 const ZOD_ARRAY_STYLES = ['function', 'method'];
 
@@ -43,14 +43,22 @@ export const arrayStyle = createZodPluginRule<[Options], MessageIds>({
   create(context, [{ style }]) {
     const { sourceCode } = context;
 
-    const { createSchemaVisitor, collectZodChainMethods } = zodImportScope.createTracker({
-      kind: 'value',
-    });
+    const { createSchemaVisitor, collectZodChainMethods, resolveZodImport } =
+      zodImportScope.createTracker({ kind: 'value', sourceCode });
 
     return createSchemaVisitor({
       onSchema(node, zodSchemaMeta): void {
-        // the import tracker matches by name, so a shadowed or type-only `z` still reaches here
-        if (!hasZodRuntimeImportRoot(node, sourceCode)) {
+        // walk to the head of the chain: `z.array(x).optional()` -> `z`
+        let root: TSESTree.Node = node;
+        while (
+          root.type === AST_NODE_TYPES.CallExpression ||
+          root.type === AST_NODE_TYPES.MemberExpression
+        ) {
+          root = root.type === AST_NODE_TYPES.CallExpression ? root.callee : root.object;
+        }
+
+        // detection matches by name, so a shadowed `z` still reaches here
+        if (!resolveZodImport(root)) {
           return;
         }
         const { schemaDecl, schemaType } = zodSchemaMeta;
@@ -58,54 +66,49 @@ export const arrayStyle = createZodPluginRule<[Options], MessageIds>({
         if (style === 'method') {
           // match all z.array(z.string()) and convert them into z.string().array()
           if (schemaType === 'array') {
-            if (schemaDecl === 'namespace') {
-              context.report({
-                node,
-                messageId: 'useMethod',
-                fix(fixer) {
-                  // extract inner schema from the call chain (handles chained calls like `.optional()`)
-                  const chain = collectZodChainMethods(node);
-                  const arrayCall = chain.find((c) => c.name === 'array');
-                  // a custom array error, explicit type arguments or optional chaining have no method spelling
-                  if (
-                    arrayCall?.node.arguments.length !== 1 ||
-                    arrayCall.node.typeArguments ||
-                    arrayCall.node.optional ||
-                    (arrayCall.node.callee.type === AST_NODE_TYPES.MemberExpression &&
-                      arrayCall.node.callee.optional)
-                  ) {
-                    return null;
-                  }
-                  const [arg] = arrayCall.node.arguments;
-                  // anything else needs parentheses in method position, or is not a schema to begin with
-                  if (
-                    arg.type !== AST_NODE_TYPES.Identifier &&
-                    arg.type !== AST_NODE_TYPES.MemberExpression &&
-                    arg.type !== AST_NODE_TYPES.CallExpression
-                  ) {
-                    return null;
-                  }
-                  // the fix keeps only the argument text, so a comment outside it would be dropped
-                  if (
-                    sourceCode
-                      .getCommentsInside(arrayCall.node)
-                      .some(
-                        (comment) =>
-                          comment.range[0] < arg.range[0] || comment.range[1] > arg.range[1],
-                      )
-                  ) {
-                    return null;
-                  }
-                  const argText = sourceCode.getText(arg);
-                  return fixer.replaceText(arrayCall.node, `${argText}.array()`);
-                },
-              });
-              return;
-            }
-
             context.report({
               node,
               messageId: 'useMethod',
+              fix(fixer) {
+                if (schemaDecl !== 'namespace') {
+                  return null;
+                }
+                // extract inner schema from the call chain (handles chained calls like `.optional()`)
+                const chain = collectZodChainMethods(node);
+                const arrayCall = chain.find((c) => c.name === 'array');
+                // a custom array error, explicit type arguments or optional chaining have no method spelling
+                if (
+                  arrayCall?.node.arguments.length !== 1 ||
+                  arrayCall.node.typeArguments ||
+                  arrayCall.node.optional ||
+                  (arrayCall.node.callee.type === AST_NODE_TYPES.MemberExpression &&
+                    arrayCall.node.callee.optional)
+                ) {
+                  return null;
+                }
+                const [arg] = arrayCall.node.arguments;
+                // anything else needs parentheses in method position, or is not a schema to begin with
+                if (
+                  arg.type !== AST_NODE_TYPES.Identifier &&
+                  arg.type !== AST_NODE_TYPES.MemberExpression &&
+                  arg.type !== AST_NODE_TYPES.CallExpression
+                ) {
+                  return null;
+                }
+                // the fix keeps only the argument text, so a comment outside it would be dropped
+                if (
+                  sourceCode
+                    .getCommentsInside(arrayCall.node)
+                    .some(
+                      (comment) =>
+                        comment.range[0] < arg.range[0] || comment.range[1] > arg.range[1],
+                    )
+                ) {
+                  return null;
+                }
+                const argText = sourceCode.getText(arg);
+                return fixer.replaceText(arrayCall.node, `${argText}.array()`);
+              },
             });
           }
           return;
@@ -122,21 +125,16 @@ export const arrayStyle = createZodPluginRule<[Options], MessageIds>({
 
         if (arrayMethod) {
           const { node: arrayNode, member: callee } = arrayMethod;
-          if (schemaDecl === 'namespace' && callee) {
-            context.report({
-              node,
-              messageId: 'useFunction',
-              fix(fixer) {
-                const objText = sourceCode.getText(callee.object);
-                return fixer.replaceText(arrayNode, `z.array(${objText})`);
-              },
-            });
-            return;
-          }
-
           context.report({
             node,
             messageId: 'useFunction',
+            fix(fixer) {
+              if (schemaDecl !== 'namespace' || !callee) {
+                return null;
+              }
+              const objText = sourceCode.getText(callee.object);
+              return fixer.replaceText(arrayNode, `z.array(${objText})`);
+            },
           });
         }
       },

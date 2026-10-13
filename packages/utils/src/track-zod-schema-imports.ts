@@ -375,7 +375,9 @@ export function trackZodSchemaImports(
     if (!sourceCode) {
       throw new Error('resolveZodImport needs a tracker created with a `sourceCode`.');
     }
-    const definition = ASTUtils.findVariable(sourceCode.getScope(node), node.name)?.defs[0];
+    const variable = ASTUtils.findVariable(sourceCode.getScope(node), node.name);
+    // more than one definition means the binding is re-declared, so the import does not settle its value
+    const definition = variable?.defs.length === 1 ? variable.defs[0] : undefined;
     if (
       definition?.type !== TSESLint.Scope.DefinitionType.ImportBinding ||
       definition.node.type === AST_NODE_TYPES.TSImportEqualsDeclaration

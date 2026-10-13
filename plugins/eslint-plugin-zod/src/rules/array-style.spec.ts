@@ -12,6 +12,10 @@ ruleTester.run(`${arrayStyle.name} (function)`, arrayStyle, {
       code: 'import { z } from "zod"; function f(z) { return z.string().array(); }',
     },
     {
+      name: 'ignores a re-declared namespace in function style',
+      code: 'import * as z from "zod"; function z() {} z.string().array();',
+    },
+    {
       name: 'ignores a type-only namespace in function style',
       code: 'import type { z } from "zod"; z.string().array();',
     },
