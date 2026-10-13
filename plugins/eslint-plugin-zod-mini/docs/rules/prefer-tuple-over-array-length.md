@@ -95,6 +95,8 @@ Autofix is also **not applied** when:
 - A length check shares a `.check()` with unrelated checks (e.g. `.check(z.minLength(1), z.refine(fn))`), since removing it would orphan the sibling
 - The array is referenced via named imports (e.g. `import { array } from 'zod/mini'`), since the fix would need to add a `tuple` import
 - The `z.array()` call does not have exactly one element-schema argument
+- The length check carries a custom error (e.g. `z.array(x).check(z.length(2, 'two'))`), which a tuple has no place for
+- The count is above 10 (e.g. `.check(z.length(11))`), since the fix repeats the element schema once per item
 
 In these cases the rule still reports but leaves the code unchanged.
 

@@ -236,5 +236,23 @@ ruleTester.run(preferTupleOverArrayLength.name, preferTupleOverArrayLength, {
       errors: [{ messageId: 'preferTuple' }],
       output: null,
     },
+    {
+      name: 'length check with a custom error — reported without a fix',
+      code: dedent`
+        import * as z from 'zod/mini';
+        z.array(z.string()).check(z.length(2, 'two'));
+      `,
+      errors: [{ messageId: 'preferTuple' }],
+      output: null,
+    },
+    {
+      name: 'large count — reported without a fix',
+      code: dedent`
+        import * as z from 'zod/mini';
+        z.array(z.string()).check(z.length(11));
+      `,
+      errors: [{ messageId: 'preferTuple' }],
+      output: null,
+    },
   ],
 });

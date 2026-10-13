@@ -6,6 +6,10 @@ import type { ZodSchemaConstraint } from '../collect-zod-schema-constraints.js';
 import { readIntegerLiteralValue } from '../read-integer-literal-value.js';
 import { canonicalizeZodConstraintName } from '../zod-check-vocabulary.js';
 import type { ZodImportScope } from '../zod-import-scope.js';
+import { ZOD_TYPE_CHANGING_METHODS } from '../zod-type-changing-methods.js';
+
+/** The fix repeats the element schema once per item, so a large count is left to the author. */
+const MAX_FIXABLE_LENGTH = 10;
 
 type MessageIds = 'preferTuple';
 
@@ -52,7 +56,13 @@ export function buildPreferTupleOverArrayLengthCreate(
       schemaType: 'array',
       onSchema(node, zodSchemaMeta): void {
         const methods = collectZodChainMethods(node);
-        const constraints = collectZodSchemaConstraints(node);
+        const allConstraints = collectZodSchemaConstraints(node);
+        // `z.array(x).array().min(2)`: past a type-changing method the checks bound another schema.
+        const typeChangeAt = allConstraints.findIndex(
+          (it) => it.origin === 'chained' && ZOD_TYPE_CHANGING_METHODS.includes(it.name),
+        );
+        const constraints =
+          typeChangeAt === -1 ? allConstraints : allConstraints.slice(0, typeChangeAt);
 
         const candidates: Array<LengthCandidate> = [];
         for (const constraint of constraints) {
@@ -134,7 +144,12 @@ export function buildPreferTupleOverArrayLengthCreate(
             }
 
             const count = readIntegerLiteralValue(countArgument);
-            if (count === null) {
+            if (count === null || count > MAX_FIXABLE_LENGTH) {
+              return null;
+            }
+
+            // A second argument is a custom error, which a tuple has no place for.
+            if (removable.some((it) => it.node.arguments.length > 1)) {
               return null;
             }
 

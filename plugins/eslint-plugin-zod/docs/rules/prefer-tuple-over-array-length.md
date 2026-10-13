@@ -96,6 +96,8 @@ Autofix is also **not applied** when:
 - The array carries more than one length constraint that does not reduce to a single length (e.g. `z.array(x).min(2).max(5)`), since the leftover check has no tuple equivalent
 - The array is referenced via named imports (e.g. `import { array } from 'zod'`), since the fix would need to add a `tuple` import
 - The `z.array()` call does not have exactly one element-schema argument
+- The length check carries a custom error (e.g. `z.array(x).length(2, 'two')`), which a tuple has no place for
+- The count is above 10 (e.g. `z.array(x).length(11)`), since the fix repeats the element schema once per item
 
 In these cases the rule still reports but leaves the code unchanged.
 

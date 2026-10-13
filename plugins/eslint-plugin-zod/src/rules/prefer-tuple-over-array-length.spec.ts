@@ -8,6 +8,13 @@ const ruleTester = new RuleTester();
 ruleTester.run(preferTupleOverArrayLength.name, preferTupleOverArrayLength, {
   valid: [
     {
+      name: 'length check after a type-changing method bounds the outer array',
+      code: dedent`
+        import * as z from 'zod';
+        z.array(z.string()).array().min(2);
+      `,
+    },
+    {
       name: 'already a tuple',
       code: dedent`
         import * as z from 'zod';
@@ -233,6 +240,24 @@ ruleTester.run(preferTupleOverArrayLength.name, preferTupleOverArrayLength, {
       code: dedent`
         import * as z from 'zod';
         (z.array(z.string())).length(2);
+      `,
+      errors: [{ messageId: 'preferTuple' }],
+      output: null,
+    },
+    {
+      name: 'length check with a custom error — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        z.array(z.string()).length(2, 'two');
+      `,
+      errors: [{ messageId: 'preferTuple' }],
+      output: null,
+    },
+    {
+      name: 'large count — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        z.array(z.string()).length(11);
       `,
       errors: [{ messageId: 'preferTuple' }],
       output: null,
