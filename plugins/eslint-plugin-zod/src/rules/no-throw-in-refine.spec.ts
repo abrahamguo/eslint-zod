@@ -176,5 +176,32 @@ ruleTester.run(noThrowInRefine.name, noThrowInRefine, {
         { messageId: 'noThrowInRefine' },
       ],
     },
+    {
+      name: 'throw in a later refine of the same chain',
+      code: dedent`
+        import * as z from 'zod';
+        z.string().refine(() => true).refine((val) => {
+          throw new Error('x');
+        });
+      `,
+      errors: [{ messageId: 'noThrowInRefine' }],
+    },
+    {
+      name: 'throw inside a switch case and a labelled block',
+      code: dedent`
+        import * as z from 'zod';
+        z.string().refine((val) => {
+          switch (val) {
+            case 'a':
+              throw new Error('x');
+            default:
+              outer: {
+                throw new Error('y');
+              }
+          }
+        });
+      `,
+      errors: [{ messageId: 'noThrowInRefine' }, { messageId: 'noThrowInRefine' }],
+    },
   ],
 });

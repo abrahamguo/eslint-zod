@@ -41,33 +41,39 @@ export function buildNoThrowInRefineCreate(
             checkNode(node.finalizer);
           }
           break;
+        case AST_NODE_TYPES.SwitchStatement:
+          node.cases.forEach((switchCase) => {
+            switchCase.consequent.forEach(checkNode);
+          });
+          break;
+        case AST_NODE_TYPES.LabeledStatement:
+          checkNode(node.body);
+          break;
         // Ignore nested functions
         case AST_NODE_TYPES.FunctionExpression:
         case AST_NODE_TYPES.ArrowFunctionExpression:
         case AST_NODE_TYPES.FunctionDeclaration:
           break;
-        // `BlockStatement` is the only statement carrying a list of statements,
-        // and it has its own case above — nothing else to descend into.
         // no default
       }
     }
 
     return createSchemaVisitor({
       onSchema(node): void {
-        const refineMethod = collectZodChainMethods(node).find((it) => it.name === 'refine');
+        for (const method of collectZodChainMethods(node)) {
+          if (method.name !== 'refine') {
+            continue;
+          }
 
-        if (!refineMethod) {
-          return;
-        }
-
-        // `.refine()` with no argument is invalid zod but valid JS,
-        // so the argument list can legitimately be empty here.
-        const callback = refineMethod.node.arguments.at(0);
-        if (
-          callback?.type === AST_NODE_TYPES.ArrowFunctionExpression ||
-          callback?.type === AST_NODE_TYPES.FunctionExpression
-        ) {
-          checkNode(callback.body);
+          // `.refine()` with no argument is invalid zod but valid JS,
+          // so the argument list can legitimately be empty here.
+          const callback = method.node.arguments.at(0);
+          if (
+            callback?.type === AST_NODE_TYPES.ArrowFunctionExpression ||
+            callback?.type === AST_NODE_TYPES.FunctionExpression
+          ) {
+            checkNode(callback.body);
+          }
         }
       },
     });
