@@ -22,9 +22,11 @@ export function buildNoAnySchemaCreate(
           return;
         }
 
-        // No member for a named import (`any()`) or a computed factory (`z['any']()`):
-        // neither can be renamed, so those are reported without the suggestion.
-        const factoryCallee = collectZodChainMethods(node).at(0)?.member;
+        // Only `<namespace>.any` can be renamed in place:
+        // a named import (`any()`) has no member, a computed factory (`z['any']()`) no walkable chain,
+        // and after a property access (`z.any().shape.x()`) the chain no longer starts at the factory.
+        const head = collectZodChainMethods(node).at(0)?.member;
+        const factoryCallee = head?.object.type === AST_NODE_TYPES.Identifier ? head : null;
 
         context.report({
           node,

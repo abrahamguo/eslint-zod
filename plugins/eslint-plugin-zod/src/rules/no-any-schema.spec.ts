@@ -129,5 +129,13 @@ ruleTester.run(noAnySchema.name, noAnySchema, {
         const schema = z['any']();
       `,
     ),
+    {
+      name: 'call reached through a property access — reported without the suggestion',
+      code: dedent`
+        import * as z from 'zod';
+        z.any().foo.bar();
+      `,
+      errors: [{ messageId: 'noZAny' }],
+    },
   ],
 });
