@@ -8,6 +8,21 @@ const ruleTester = new RuleTester();
 ruleTester.run(noConflictingChecks.name, noConflictingChecks, {
   valid: [
     {
+      name: 'checks on either side of a mutating method see different values',
+      code: dedent`
+        import * as z from 'zod';
+        z.string().min(3).trim().min(1);
+        z.string().length(5).trim().length(3);
+      `,
+    },
+    {
+      name: 'mac with params has no fixed length',
+      code: dedent`
+        import * as z from 'zod';
+        z.mac({ delimiter: '' }).length(12);
+      `,
+    },
+    {
       name: 'a zero divisor is left alone',
       code: dedent`
         import * as z from 'zod';
@@ -187,6 +202,15 @@ ruleTester.run(noConflictingChecks.name, noConflictingChecks, {
     },
   ],
   invalid: [
+    {
+      name: 'empty string length range across a mutating method — zod throws on it',
+      code: dedent`
+        import * as z from 'zod';
+        z.string().min(5).trim().max(3);
+        z.string().max(3).toLowerCase().min(5);
+      `,
+      errors: [{ messageId: 'impossibleCase' }, { messageId: 'impossibleCase' }],
+    },
     {
       name: 'empty number range (gt/lt)',
       code: dedent`

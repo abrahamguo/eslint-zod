@@ -7,6 +7,7 @@ import type { ZodSchemaBaseType } from '../get-zod-schema-base-type.js';
 import type { ZodCheckDescriptor, ZodCheckDomain } from '../zod-check-vocabulary.js';
 import { canonicalizeZodConstraintName, getZodCheckDescriptor } from '../zod-check-vocabulary.js';
 import type { ZodImportScope } from '../zod-import-scope.js';
+import { ZOD_MUTATING_CHECK_NAMES } from '../zod-mutating-check-names.js';
 import { ZOD_TYPE_CHANGING_METHODS } from '../zod-type-changing-methods.js';
 
 /** Options contract implemented by each plugin's rule. */
@@ -196,6 +197,41 @@ export function buildNoConflictingChecksCreate(
       });
     }
 
+    /**
+     * zod builds one pattern from a string's `min` and `max` whatever sits between them,
+     * and throws on an empty one, so that pair is compared across segments too.
+     */
+    function analyzeStringLengthRange(
+      checks: Array<AnalyzedCheck>,
+      segmentOf: Map<AnalyzedCheck, number>,
+    ): void {
+      const lowers: Array<Bound> = [];
+      const uppers: Array<Bound> = [];
+      for (const check of checks) {
+        const { bound } = check.descriptor;
+        if (bound?.domain !== 'length' || (bound.kind !== 'lower' && bound.kind !== 'upper')) {
+          continue;
+        }
+        const value = bound.fixedValue ?? asNumeric(check.literalValue);
+        if (value !== undefined) {
+          const entry: Bound = { value, inclusive: bound.inclusive ?? true, check };
+          (bound.kind === 'lower' ? lowers : uppers).push(entry);
+        }
+      }
+
+      const lower = strongestLower(lowers);
+      const upper = strongestUpper(uppers);
+      // A pair inside one segment is already reported by `analyzeBounds`.
+      if (
+        lower &&
+        upper &&
+        segmentOf.get(lower.check) !== segmentOf.get(upper.check) &&
+        boundsConflict(lower, upper)
+      ) {
+        reportImpossiblePair(lower.check, upper.check);
+      }
+    }
+
     function reportRedundant(redundant: AnalyzedCheck, by: AnalyzedCheck): void {
       if (!options.checkConfusingCases) {
         return;
@@ -282,7 +318,9 @@ export function buildNoConflictingChecksCreate(
           }
         }
         if (format) {
-          const range = FORMAT_LENGTH_RANGES.get(check.canonical);
+          // `z.mac({ delimiter: '' })` changes the length, so params void the range.
+          const hasShapingParams = check.canonical === 'mac' && check.node.arguments.length > 0;
+          const range = hasShapingParams ? undefined : FORMAT_LENGTH_RANGES.get(check.canonical);
           if (range) {
             const [formatMin, formatMax] = range;
             if (!impliedLower || formatMin > impliedLower.value) {
@@ -595,6 +633,9 @@ export function buildNoConflictingChecksCreate(
         }
 
         const checks: Array<AnalyzedCheck> = [];
+        // A mutating check (`.trim()`) starts a new segment:
+        // what precedes it constrained another value, so the two sides are never compared.
+        const segmentStarts = [0];
 
         // A string-format factory (`z.uuid()`, `z.email()`, …) behaves like a format check applied to a string schema.
         const baseDescriptor = getZodCheckDescriptor(zodSchemaMeta.schemaType);
@@ -610,6 +651,11 @@ export function buildNoConflictingChecksCreate(
         }
 
         for (const [index, constraint] of collectZodSchemaConstraints(node).entries()) {
+          if (ZOD_MUTATING_CHECK_NAMES.includes(constraint.name)) {
+            segmentStarts.push(checks.length);
+            continue;
+          }
+
           const canonical = canonicalizeZodConstraintName(constraint, baseType);
           if (canonical === null) {
             continue;
@@ -663,14 +709,27 @@ export function buildNoConflictingChecksCreate(
           }
         }
 
-        analyzeBounds(applicable, 'length');
-        analyzeBounds(applicable, 'size');
-        analyzeBounds(applicable, 'value');
-        analyzeFormats(applicable);
-        analyzeContent(applicable);
-        analyzeRegex(applicable);
-        analyzeCasing(applicable);
-        analyzeMultiples(applicable);
+        const segmentOf = new Map<AnalyzedCheck, number>();
+        for (const [position, start] of segmentStarts.entries()) {
+          const segment = new Set(checks.slice(start, segmentStarts[position + 1]));
+          const segmentChecks = applicable.filter((check) => segment.has(check));
+          for (const check of segmentChecks) {
+            segmentOf.set(check, position);
+          }
+
+          analyzeBounds(segmentChecks, 'length');
+          analyzeBounds(segmentChecks, 'size');
+          analyzeBounds(segmentChecks, 'value');
+          analyzeFormats(segmentChecks);
+          analyzeContent(segmentChecks);
+          analyzeRegex(segmentChecks);
+          analyzeCasing(segmentChecks);
+          analyzeMultiples(segmentChecks);
+        }
+
+        if (baseType === 'string') {
+          analyzeStringLengthRange(applicable, segmentOf);
+        }
       },
     });
   };

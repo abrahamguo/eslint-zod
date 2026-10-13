@@ -8,6 +8,13 @@ const ruleTester = new RuleTester();
 ruleTester.run(noConflictingChecks.name, noConflictingChecks, {
   valid: [
     {
+      name: 'checks on either side of a mutating check see different values',
+      code: dedent`
+        import * as z from 'zod/mini';
+        z.string().check(z.minLength(3), z.trim(), z.minLength(1));
+      `,
+    },
+    {
       name: 'a zero divisor is left alone',
       code: dedent`
         import * as z from 'zod/mini';
@@ -225,6 +232,14 @@ ruleTester.run(noConflictingChecks.name, noConflictingChecks, {
     },
   ],
   invalid: [
+    {
+      name: 'empty string length range across a mutating check — zod throws on it',
+      code: dedent`
+        import * as z from 'zod/mini';
+        z.string().check(z.minLength(5), z.trim(), z.maxLength(3));
+      `,
+      errors: [{ messageId: 'impossibleCase' }],
+    },
     {
       name: 'empty number range in one check',
       code: dedent`
