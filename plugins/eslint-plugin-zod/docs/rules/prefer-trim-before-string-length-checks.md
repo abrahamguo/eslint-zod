@@ -8,7 +8,7 @@
 
 <!-- end auto-generated rule header -->
 
-When using `.trim()` with length constraints like `.min()`, `.max()`, or `.length()`, the order matters.
+When using `.trim()` with length constraints like `.min()`, `.max()`, `.length()`, or `.nonempty()`, the order matters.
 
 - `z.string().trim().min(1)` — trims first, then checks length → a string of spaces **fails** validation (correct behavior)
 - `z.string().min(1).trim()` — checks length first, then trims → a string of spaces **passes** validation (likely unintended)
@@ -17,7 +17,7 @@ This rule enforces that `.trim()` always appears before any length checks to ens
 
 ## Rule Details
 
-This rule reports an error when `.trim()` appears after `.min()`, `.max()`, or `.length()` in a `z.string()` chain.
+This rule reports an error when `.trim()` appears after `.min()`, `.max()`, `.length()`, or `.nonempty()` in a `z.string()` chain.
 
 It includes an auto-fixer that moves `.trim()` to immediately after `z.string()`.
 

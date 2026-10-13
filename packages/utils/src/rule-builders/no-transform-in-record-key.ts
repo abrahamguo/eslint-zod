@@ -1,4 +1,4 @@
-import type { TSESLint } from '@typescript-eslint/utils';
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import type { ZodImportScope } from '../zod-import-scope.js';
@@ -24,8 +24,36 @@ export function buildNoTransformInRecordKeyCreate(
       collectZodSchemaConstraints,
     } = scope.createTracker({ kind: 'value' });
 
+    function findTransform(schema: TSESTree.CallExpression): TSESTree.Node | undefined {
+      // The factory itself can be the transform; the constraint list starts after it.
+      const factory = detectZodSchemaRootNode(schema);
+      if (factory && transformNames.includes(factory.schemaType)) {
+        return schema;
+      }
+
+      const constraint = collectZodSchemaConstraints(schema).find((it) =>
+        transformNames.includes(it.name),
+      );
+      if (constraint) {
+        return constraint.node;
+      }
+
+      // `z.pipe(z.string(), z.transform(fn))`: the transform is one of the piped schemas.
+      if (factory?.schemaType === 'pipe') {
+        for (const argument of schema.arguments) {
+          const found =
+            argument.type === AST_NODE_TYPES.CallExpression ? findTransform(argument) : undefined;
+          if (found) {
+            return found;
+          }
+        }
+      }
+
+      return undefined;
+    }
+
     return createSchemaVisitor({
-      schemaType: 'record',
+      schemaType: ['record', 'partialRecord', 'looseRecord'],
       onSchema(node): void {
         // `node` is the outermost call, which is not the `record()` one once something is chained on it.
         const recordCall = collectZodChainMethods(node).at(0)?.node ?? node;
@@ -35,14 +63,7 @@ export function buildNoTransformInRecordKeyCreate(
           return;
         }
 
-        // The factory itself can be the transform; the constraint list starts after it.
-        const factory = detectZodSchemaRootNode(keySchema);
-        const reportNode =
-          factory && transformNames.includes(factory.schemaType)
-            ? keySchema
-            : collectZodSchemaConstraints(keySchema).find((constraint) =>
-                transformNames.includes(constraint.name),
-              )?.node;
+        const reportNode = findTransform(keySchema);
 
         if (reportNode) {
           context.report({

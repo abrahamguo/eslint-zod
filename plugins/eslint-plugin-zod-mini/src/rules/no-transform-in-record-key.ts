@@ -3,6 +3,8 @@ import { buildNoTransformInRecordKeyCreate } from '@eslint-zod/utils/rule-builde
 
 import { createZodMiniPluginRule } from '../utils/create-plugin-rule.js';
 
+const TRANSFORM_NAMES = [...ZOD_MUTATING_CHECK_NAMES, 'transform'];
+
 export const noTransformInRecordKey = createZodMiniPluginRule({
   name: 'no-transform-in-record-key',
   meta: {
@@ -18,5 +20,5 @@ export const noTransformInRecordKey = createZodMiniPluginRule({
     schema: [],
   },
   defaultOptions: [],
-  create: buildNoTransformInRecordKeyCreate(zodMiniImportScope, ZOD_MUTATING_CHECK_NAMES),
+  create: buildNoTransformInRecordKeyCreate(zodMiniImportScope, TRANSFORM_NAMES),
 });

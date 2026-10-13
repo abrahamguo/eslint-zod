@@ -197,5 +197,17 @@ ruleTester.run(preferTrimBeforeStringLengthChecks.name, preferTrimBeforeStringLe
       errors: [{ messageId: 'trimBeforeLengthCheck' }],
       output: null,
     },
+    {
+      name: 'trim after nonempty',
+      code: dedent`
+        import * as z from 'zod';
+        z.string().nonempty().trim();
+      `,
+      errors: [{ messageId: 'trimBeforeLengthCheck' }],
+      output: dedent`
+        import * as z from 'zod';
+        z.string().trim().nonempty();
+      `,
+    },
   ],
 });

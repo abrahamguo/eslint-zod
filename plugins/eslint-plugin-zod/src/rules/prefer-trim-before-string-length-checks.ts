@@ -4,7 +4,7 @@ import type { TSESTree } from '@typescript-eslint/utils';
 import { createZodPluginRule } from '../utils/create-plugin-rule.js';
 import { isRecordKeySchema } from '../utils/is-record-key-schema.js';
 
-const LENGTH_CHECK_METHODS = ['min', 'max', 'length'];
+const LENGTH_CHECK_METHODS = ['min', 'max', 'length', 'nonempty'];
 
 export const preferTrimBeforeStringLengthChecks = createZodPluginRule({
   name: 'prefer-trim-before-string-length-checks',
@@ -17,7 +17,7 @@ export const preferTrimBeforeStringLengthChecks = createZodPluginRule({
     },
     messages: {
       trimBeforeLengthCheck:
-        '`.trim()` must be called before length checks (`.min()`, `.max()`, `.length()`) to ensure accurate validation.',
+        '`.trim()` must be called before length checks (`.min()`, `.max()`, `.length()`, `.nonempty()`) to ensure accurate validation.',
     },
     schema: [],
   },

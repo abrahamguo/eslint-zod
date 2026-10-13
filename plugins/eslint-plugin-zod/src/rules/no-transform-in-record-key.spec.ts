@@ -357,5 +357,14 @@ ruleTester.run(noTransformInRecordKey.name, noTransformInRecordKey, {
       `,
       errors: [{ messageId: 'noTransformInRecordKey' }],
     },
+    {
+      name: 'transform on the key of partialRecord and looseRecord',
+      code: dedent`
+        import * as z from 'zod';
+        z.partialRecord(z.string().trim(), z.number());
+        z.looseRecord(z.string().trim(), z.number());
+      `,
+      errors: [{ messageId: 'noTransformInRecordKey' }, { messageId: 'noTransformInRecordKey' }],
+    },
   ],
 });
