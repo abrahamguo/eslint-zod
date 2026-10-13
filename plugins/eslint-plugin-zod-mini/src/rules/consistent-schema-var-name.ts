@@ -3,14 +3,7 @@ import { buildConsistentSchemaVarNameCreate } from '@eslint-zod/utils/rule-build
 
 import { createZodMiniPluginRule } from '../utils/create-plugin-rule.js';
 
-interface Options {
-  before?: string;
-  after?: string;
-}
-
-type MessageIds = 'invalidName';
-
-export const consistentSchemaVarName = createZodMiniPluginRule<[Options], MessageIds>({
+export const consistentSchemaVarName = createZodMiniPluginRule({
   name: 'consistent-schema-var-name',
   meta: {
     type: 'suggestion',

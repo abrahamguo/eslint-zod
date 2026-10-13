@@ -1,16 +1,9 @@
 import { zodImportScope } from '@eslint-zod/utils';
 import { buildNoConflictingChecksCreate } from '@eslint-zod/utils/rule-builders/no-conflicting-checks';
-import type {
-  NoConflictingChecksMessageIds,
-  NoConflictingChecksOptions,
-} from '@eslint-zod/utils/rule-builders/no-conflicting-checks';
 
 import { createZodPluginRule } from '../utils/create-plugin-rule.js';
 
-export const noConflictingChecks = createZodPluginRule<
-  [NoConflictingChecksOptions],
-  NoConflictingChecksMessageIds
->({
+export const noConflictingChecks = createZodPluginRule({
   name: 'no-conflicting-checks',
   meta: {
     type: 'problem',

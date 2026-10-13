@@ -3,12 +3,7 @@ import { buildSchemaErrorPropertyStyleCreate } from '@eslint-zod/utils/rule-buil
 
 import { createZodPluginRule } from '../utils/create-plugin-rule.js';
 
-type MessageIds = 'invalidStyle' | 'invalidSelector';
-
-export const schemaErrorPropertyStyle = createZodPluginRule<
-  [{ selector: string; example: string }],
-  MessageIds
->({
+export const schemaErrorPropertyStyle = createZodPluginRule({
   name: 'schema-error-property-style',
   meta: {
     type: 'suggestion',

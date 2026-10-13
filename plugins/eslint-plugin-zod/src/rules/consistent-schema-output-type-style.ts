@@ -1,19 +1,12 @@
 import { zodImportScope } from '@eslint-zod/utils';
-import { buildConsistentSchemaOutputTypeStyleCreate } from '@eslint-zod/utils/rule-builders/consistent-schema-output-type-style';
+import {
+  ZOD_SCHEMA_TYPE_STYLES,
+  buildConsistentSchemaOutputTypeStyleCreate,
+} from '@eslint-zod/utils/rule-builders/consistent-schema-output-type-style';
 
 import { createZodPluginRule } from '../utils/create-plugin-rule.js';
 
-const ZOD_SCHEMA_TYPE_STYLES = ['infer', 'output'] as const;
-
-type SchemaTypeStyle = (typeof ZOD_SCHEMA_TYPE_STYLES)[number];
-
-interface Options {
-  style: SchemaTypeStyle;
-}
-
-type MessageIds = 'useInfer' | 'useOutput';
-
-export const consistentSchemaOutputTypeStyle = createZodPluginRule<[Options], MessageIds>({
+export const consistentSchemaOutputTypeStyle = createZodPluginRule({
   name: 'consistent-schema-output-type-style',
   meta: {
     type: 'suggestion',

@@ -6,7 +6,7 @@ import type { ZodImportScope } from '../zod-import-scope.js';
 import { ZOD_NON_SCHEMA_PRODUCING_METHODS } from '../zod-non-schema-producing-methods.js';
 import { isZodSchemaFactoryCall } from '../zod-schema-factory-names.js';
 
-interface Options {
+export interface ConsistentSchemaVarNameOptions {
   before?: string;
   after?: string;
 }
@@ -21,8 +21,8 @@ function addPrefix(before: string, name: string): string {
 export function buildConsistentSchemaVarNameCreate(
   scope: ZodImportScope,
 ): (
-  context: Readonly<TSESLint.RuleContext<'invalidName', [Options]>>,
-  options: readonly [Options],
+  context: Readonly<TSESLint.RuleContext<'invalidName', [ConsistentSchemaVarNameOptions]>>,
+  options: readonly [ConsistentSchemaVarNameOptions],
 ) => TSESLint.RuleListener {
   return function create(context, [{ before = '', after = '' }]) {
     const { importDeclarationListener, detectZodSchemaRootNode } = scope.createTracker({

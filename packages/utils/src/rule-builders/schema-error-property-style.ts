@@ -4,7 +4,7 @@ import esquery from 'esquery';
 
 import type { ZodImportScope } from '../zod-import-scope.js';
 
-interface Options {
+export interface SchemaErrorPropertyStyleOptions {
   selector: string;
   example: string;
 }
@@ -14,8 +14,8 @@ type MessageIds = 'invalidStyle' | 'invalidSelector';
 export function buildSchemaErrorPropertyStyleCreate(
   scope: ZodImportScope,
 ): (
-  context: Readonly<TSESLint.RuleContext<MessageIds, [Options]>>,
-  options: readonly [Options],
+  context: Readonly<TSESLint.RuleContext<MessageIds, [SchemaErrorPropertyStyleOptions]>>,
+  options: readonly [SchemaErrorPropertyStyleOptions],
 ) => TSESLint.RuleListener {
   return function create(context, [{ selector, example }]) {
     const { createSchemaVisitor, collectZodChainMethods } = scope.createTracker({ kind: 'value' });

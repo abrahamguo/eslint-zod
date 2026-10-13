@@ -1,20 +1,12 @@
 import { zodMiniImportScope } from '@eslint-zod/utils';
-import { buildConsistentObjectSchemaTypeCreate } from '@eslint-zod/utils/rule-builders/consistent-object-schema-type';
+import {
+  ZOD_OBJECT_METHODS,
+  buildConsistentObjectSchemaTypeCreate,
+} from '@eslint-zod/utils/rule-builders/consistent-object-schema-type';
 
 import { createZodMiniPluginRule } from '../utils/create-plugin-rule.js';
 
-const ZOD_OBJECT_METHODS = ['object', 'looseObject', 'strictObject'] as const;
-
-type ZodObjectMethod = (typeof ZOD_OBJECT_METHODS)[number];
-
-interface Options {
-  allow: Array<ZodObjectMethod>;
-}
-type MessageIds = 'consistentMethod' | 'useMethod';
-
-const defaultOptions: Options = { allow: ['object'] };
-
-export const consistentObjectSchemaType = createZodMiniPluginRule<[Options], MessageIds>({
+export const consistentObjectSchemaType = createZodMiniPluginRule({
   name: 'consistent-object-schema-type',
   meta: {
     hasSuggestions: true,
@@ -46,6 +38,6 @@ export const consistentObjectSchemaType = createZodMiniPluginRule<[Options], Mes
       },
     ],
   },
-  defaultOptions: [defaultOptions],
+  defaultOptions: [{ allow: ['object'] }],
   create: buildConsistentObjectSchemaTypeCreate(zodMiniImportScope),
 });

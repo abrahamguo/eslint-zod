@@ -3,12 +3,7 @@ import { buildConsistentImportSourceCreate } from '@eslint-zod/utils/rule-builde
 
 import { createZodMiniPluginRule } from '../utils/create-plugin-rule.js';
 
-type MessageIds = 'sourceNotAllowed' | 'replaceSource';
-
-export const consistentImportSource = createZodMiniPluginRule<
-  [{ sources: Array<(typeof zodMiniImportScope.sources)[number]> }],
-  MessageIds
->({
+export const consistentImportSource = createZodMiniPluginRule({
   name: 'consistent-import-source',
   meta: {
     hasSuggestions: true,

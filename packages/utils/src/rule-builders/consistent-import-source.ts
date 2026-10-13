@@ -4,15 +4,17 @@ import type { ZodImportScope } from '../zod-import-scope.js';
 
 type MessageIds = 'sourceNotAllowed' | 'replaceSource';
 
-interface Options<TSource extends string> {
+export interface ConsistentImportSourceOptions<TSource extends string> {
   sources: Array<TSource>;
 }
 
 export function buildConsistentImportSourceCreate<TSources extends ReadonlyArray<string>>(
   scope: ZodImportScope<TSources>,
 ): (
-  context: Readonly<TSESLint.RuleContext<MessageIds, [Options<TSources[number]>]>>,
-  options: readonly [Options<TSources[number]>],
+  context: Readonly<
+    TSESLint.RuleContext<MessageIds, [ConsistentImportSourceOptions<TSources[number]>]>
+  >,
+  options: readonly [ConsistentImportSourceOptions<TSources[number]>],
 ) => TSESLint.RuleListener {
   return function create(context, [{ sources }]) {
     return {

@@ -3,16 +3,10 @@ import {
   IMPORT_SYNTAXES,
   buildConsistentImportCreate,
 } from '@eslint-zod/utils/rule-builders/consistent-import';
-import type { ImportSyntax } from '@eslint-zod/utils/rule-builders/consistent-import';
 
 import { createZodMiniPluginRule } from '../utils/create-plugin-rule.js';
 
-interface Options {
-  syntax: ImportSyntax;
-}
-type MessageIds = 'changeImportSyntax' | 'removeDuplicate' | 'convertUsage';
-
-export const consistentImport = createZodMiniPluginRule<[Options], MessageIds>({
+export const consistentImport = createZodMiniPluginRule({
   name: 'consistent-import',
   meta: {
     type: 'problem',
@@ -32,7 +26,7 @@ export const consistentImport = createZodMiniPluginRule<[Options], MessageIds>({
           syntax: {
             description: 'Specifies the import syntax to use for Zod Mini.',
             type: 'string',
-            enum: IMPORT_SYNTAXES as never,
+            enum: [...IMPORT_SYNTAXES],
           },
         },
         additionalProperties: false,

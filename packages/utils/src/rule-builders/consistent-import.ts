@@ -8,7 +8,7 @@ import {
 import type { ImportGroupData, ImportSyntax } from '../import-syntax-helpers.js';
 import type { ZodImportScope } from '../zod-import-scope.js';
 
-interface Options {
+export interface ConsistentImportOptions {
   syntax: ImportSyntax;
 }
 
@@ -17,8 +17,8 @@ type MessageIds = 'changeImportSyntax' | 'removeDuplicate' | 'convertUsage';
 export function buildConsistentImportCreate(
   scope: ZodImportScope,
 ): (
-  context: Readonly<TSESLint.RuleContext<MessageIds, [Options]>>,
-  options: readonly [Options],
+  context: Readonly<TSESLint.RuleContext<MessageIds, [ConsistentImportOptions]>>,
+  options: readonly [ConsistentImportOptions],
 ) => TSESLint.RuleListener {
   return function create(context, [options]) {
     const { syntax } = options;

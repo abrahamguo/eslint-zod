@@ -3,9 +3,11 @@ import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import type { ZodImportScope } from '../zod-import-scope.js';
 
-type SchemaTypeStyle = 'infer' | 'output';
+export const ZOD_SCHEMA_TYPE_STYLES = Object.freeze(['infer', 'output'] as const);
 
-interface Options {
+type SchemaTypeStyle = (typeof ZOD_SCHEMA_TYPE_STYLES)[number];
+
+export interface ConsistentSchemaOutputTypeStyleOptions {
   style: SchemaTypeStyle;
 }
 
@@ -14,8 +16,8 @@ type MessageIds = 'useInfer' | 'useOutput';
 export function buildConsistentSchemaOutputTypeStyleCreate(
   scope: ZodImportScope,
 ): (
-  context: Readonly<TSESLint.RuleContext<MessageIds, [Options]>>,
-  options: readonly [Options],
+  context: Readonly<TSESLint.RuleContext<MessageIds, [ConsistentSchemaOutputTypeStyleOptions]>>,
+  options: readonly [ConsistentSchemaOutputTypeStyleOptions],
 ) => TSESLint.RuleListener {
   return function create(context, [{ style }]) {
     const {

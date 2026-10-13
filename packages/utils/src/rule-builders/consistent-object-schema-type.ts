@@ -3,11 +3,11 @@ import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import type { ZodImportScope } from '../zod-import-scope.js';
 
-const ZOD_OBJECT_METHODS = ['object', 'looseObject', 'strictObject'] as const;
+export const ZOD_OBJECT_METHODS = Object.freeze(['object', 'looseObject', 'strictObject'] as const);
 
 type ZodObjectMethod = (typeof ZOD_OBJECT_METHODS)[number];
 
-interface Options {
+export interface ConsistentObjectSchemaTypeOptions {
   allow: Array<ZodObjectMethod>;
 }
 
@@ -16,8 +16,8 @@ type MessageIds = 'consistentMethod' | 'useMethod';
 export function buildConsistentObjectSchemaTypeCreate(
   scope: ZodImportScope,
 ): (
-  context: Readonly<TSESLint.RuleContext<MessageIds, [Options]>>,
-  options: readonly [Options],
+  context: Readonly<TSESLint.RuleContext<MessageIds, [ConsistentObjectSchemaTypeOptions]>>,
+  options: readonly [ConsistentObjectSchemaTypeOptions],
 ) => TSESLint.RuleListener {
   return function create(context, [{ allow: allowedList }]) {
     const { createSchemaVisitor } = scope.createTracker({ kind: 'value' });

@@ -81,11 +81,11 @@ Canonical names shared by both API styles, so rule logic compares `zod`'s `.min(
 
 Each rule shared between `eslint-plugin-zod` and `eslint-plugin-zod-mini` (some also `eslint-plugin-zod-core`) exposes its `create(...)` factory from a dedicated subpath. Plugins keep rule metadata local and reuse the runtime logic.
 
-- `buildConsistentImportCreate(scope)`
-- `buildConsistentImportSourceCreate(scope)`
-- `buildConsistentObjectSchemaTypeCreate(scope)`
-- `buildConsistentSchemaOutputTypeStyleCreate(scope)`
-- `buildConsistentSchemaVarNameCreate(scope)`
+- `buildConsistentImportCreate(scope)` — also exports `ConsistentImportOptions`
+- `buildConsistentImportSourceCreate(scope)` — also exports `ConsistentImportSourceOptions`
+- `buildConsistentObjectSchemaTypeCreate(scope)` — also exports `ConsistentObjectSchemaTypeOptions` and `ZOD_OBJECT_METHODS`
+- `buildConsistentSchemaOutputTypeStyleCreate(scope)` — also exports `ConsistentSchemaOutputTypeStyleOptions` and `ZOD_SCHEMA_TYPE_STYLES`
+- `buildConsistentSchemaVarNameCreate(scope)` — also exports `ConsistentSchemaVarNameOptions`
 - `buildNoAnySchemaCreate(scope)`
 - `buildNoCoerceBooleanCreate(scope)`
 - `buildNoConflictingChecksCreate(scope)` — also exports the `NoConflictingChecksOptions` and `NoConflictingChecksMessageIds` contracts
@@ -105,7 +105,7 @@ Each rule shared between `eslint-plugin-zod` and `eslint-plugin-zod-mini` (some 
 - `buildPreferValidateCreate(scope, api)` — success-only parsing suggestions; `api` is a `ZodValidateApiStyle` (`schema-method` or `standalone`)
 - `buildRequireBrandTypeParameterCreate(scope)`
 - `buildRequireErrorMessageCreate(scope)`
-- `buildSchemaErrorPropertyStyleCreate(scope)`
+- `buildSchemaErrorPropertyStyleCreate(scope)` — also exports `SchemaErrorPropertyStyleOptions`
 
 The `consistent-import` builder additionally re-exports the import-syntax helpers used by its fixer: `IMPORT_SYNTAXES`, `ImportSyntax`, `isGroupFirstImportKindValidForSyntax`, `shouldIdentifierBeRenamed`, `getNamespaceAliasNameFrom`.
 

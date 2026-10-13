@@ -126,6 +126,10 @@ Three conventions the utils package holds to:
 
 Rule metadata (name, `meta`, `defaultOptions`) lives entirely per-plugin. When a rule's `create` logic is identical across plugins and differs only by import scope, extract a `build*Create(scope)` factory into `packages/utils/src/rule-builders/<rule-name>.ts` and import it in each plugin from `@eslint-zod/utils/rule-builders/<rule-name>` — the wildcard exports entry needs no per-file update.
 
+A rule built from a builder passes no type arguments to `createZodPluginRule`:
+options and message ids are inferred from the builder's `create`, so a missing message or a wrong default is a type error.
+The builder exports its options interface only so that inferred type can be named in declaration output.
+
 When part of a shared rule's behavior is genuinely plugin-specific (i.e. it cannot be expressed through the shared constraint list), the rule builder defines the contract: it exports the options interface / function signature from the builder module, and each plugin implements that interface with its own behavior — plugins never fork or duplicate the shared logic itself. Prefer eliminating the custom part first (e.g. `prefer-tuple-over-array-length` used a `findLengthConstraint` strategy until `collectZodSchemaConstraints` made it unnecessary); reach for an exported contract only when a real per-plugin difference remains.
 
 ### Rule patterns
