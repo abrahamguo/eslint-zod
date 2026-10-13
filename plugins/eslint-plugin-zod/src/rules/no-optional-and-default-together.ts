@@ -1,4 +1,4 @@
-import { zodImportScope } from '@eslint-zod/utils';
+import { ZOD_TYPE_CHANGING_METHODS, zodImportScope } from '@eslint-zod/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import { createZodPluginRule } from '../utils/create-plugin-rule.js';
@@ -60,8 +60,24 @@ export const noOptionalAndDefaultTogether = createZodPluginRule<[Options], Messa
           return;
         }
 
-        const optionalMethod = methods.find((m) => m.name === 'optional');
-        const defaultMethod = methods.find((m) => m.name === 'default');
+        // Pair the two only on the same schema:
+        // in `z.string().optional().array().default([])` they sit on either side of a type change.
+        let optionalMethod: (typeof methods)[number] | undefined;
+        let defaultMethod: (typeof methods)[number] | undefined;
+        for (const method of methods) {
+          if (ZOD_TYPE_CHANGING_METHODS.includes(method.name)) {
+            optionalMethod = undefined;
+            defaultMethod = undefined;
+          } else if (method.name === 'optional') {
+            optionalMethod ??= method;
+          } else if (method.name === 'default') {
+            defaultMethod ??= method;
+          }
+
+          if (optionalMethod && defaultMethod) {
+            break;
+          }
+        }
 
         // If not both methods are present stop processing the expression
         if (!optionalMethod || !defaultMethod) {

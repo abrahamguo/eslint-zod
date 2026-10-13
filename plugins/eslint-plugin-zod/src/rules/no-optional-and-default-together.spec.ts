@@ -8,6 +8,14 @@ const ruleTester = new RuleTester();
 ruleTester.run(noOptionalAndDefaultTogether.name, noOptionalAndDefaultTogether, {
   valid: [
     {
+      name: 'optional and default on either side of a type change',
+      code: dedent`
+          import * as z from 'zod';
+          z.string().optional().array().default([]);
+          z.string().default("x").array().optional();
+        `,
+    },
+    {
       name: 'schema with only default',
       code: dedent`
           import { string } from 'zod';
