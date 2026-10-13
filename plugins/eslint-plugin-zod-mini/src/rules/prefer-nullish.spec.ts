@@ -60,6 +60,18 @@ ruleTester.run(preferNullish.name, preferNullish, {
   ],
   invalid: [
     {
+      name: 'wrapped argument that is not a plain schema call — still fixed inside the argument slot',
+      code: dedent`
+        import * as z from 'zod/mini';
+        z.optional(z.nullable(isStrict ? strictSchema : looseSchema));
+      `,
+      errors: [{ messageId: 'preferNullish' }],
+      output: dedent`
+        import * as z from 'zod/mini';
+        z.nullish(isStrict ? strictSchema : looseSchema);
+      `,
+    },
+    {
       name: 'optional wrapping nullable',
       code: dedent`
         import * as z from 'zod/mini';

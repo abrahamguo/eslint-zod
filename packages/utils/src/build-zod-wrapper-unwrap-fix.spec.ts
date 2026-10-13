@@ -18,16 +18,31 @@ function makeFixer(): {
   return { fixer, calls };
 }
 
-function makeSourceCode(text: string): Readonly<TSESLint.SourceCode> {
-  return { getText: () => text } as unknown as Readonly<TSESLint.SourceCode>;
+function makeSourceCode(
+  text: string,
+  comments: Array<{ range: [number, number] }> = [],
+): Readonly<TSESLint.SourceCode> {
+  return {
+    getText: () => text,
+    getAllComments: () => comments,
+  } as unknown as Readonly<TSESLint.SourceCode>;
 }
 
-function makeCall(args: Array<TSESTree.CallExpressionArgument>): TSESTree.CallExpression {
-  return {
+function makeCall(
+  args: Array<TSESTree.CallExpressionArgument>,
+  { asArgument = false } = {},
+): TSESTree.CallExpression {
+  const call = {
     type: AST_NODE_TYPES.CallExpression,
     arguments: args,
     range: [0, 20],
   } as unknown as TSESTree.CallExpression;
+  call.parent = (
+    asArgument
+      ? { type: AST_NODE_TYPES.CallExpression, arguments: [call] }
+      : { type: AST_NODE_TYPES.ExpressionStatement }
+  ) as TSESTree.Node;
+  return call;
 }
 
 function makeArgument(type: AST_NODE_TYPES): TSESTree.CallExpressionArgument {
@@ -48,6 +63,55 @@ describe('buildZodWrapperUnwrapFix', () => {
 
     expect(fix).not.toBeNull();
     expect(calls.replaced).toStrictEqual({ node: wrapperCall, text: 'z.string()' });
+  });
+
+  it('keeps any expression when the wrapper is itself an argument: z.optional(z.nullable(a ? b : c))', () => {
+    const { fixer, calls } = makeFixer();
+    const wrapperCall = makeCall([makeArgument(AST_NODE_TYPES.ConditionalExpression)], {
+      asArgument: true,
+    });
+
+    buildZodWrapperUnwrapFix({ fixer, sourceCode: makeSourceCode('a ? b : c'), wrapperCall });
+
+    expect(calls.replaced).toStrictEqual({ node: wrapperCall, text: 'a ? b : c' });
+  });
+
+  it('returns null for a sequence argument, whose parentheses would be lost', () => {
+    const { fixer } = makeFixer();
+
+    const fix = buildZodWrapperUnwrapFix({
+      fixer,
+      sourceCode: makeSourceCode('a, b'),
+      wrapperCall: makeCall([makeArgument(AST_NODE_TYPES.SequenceExpression)], {
+        asArgument: true,
+      }),
+    });
+
+    expect(fix).toBeNull();
+  });
+
+  it('returns null when the argument could need parentheses: z.readonly(a ? b : c)', () => {
+    const { fixer } = makeFixer();
+
+    const fix = buildZodWrapperUnwrapFix({
+      fixer,
+      sourceCode: makeSourceCode('a ? b : c'),
+      wrapperCall: makeCall([makeArgument(AST_NODE_TYPES.ConditionalExpression)]),
+    });
+
+    expect(fix).toBeNull();
+  });
+
+  it('returns null when a comment sits between the wrapper and its argument', () => {
+    const { fixer } = makeFixer();
+
+    const fix = buildZodWrapperUnwrapFix({
+      fixer,
+      sourceCode: makeSourceCode('z.string()', [{ range: [2, 9] }]),
+      wrapperCall: makeCall([makeArgument(AST_NODE_TYPES.CallExpression)]),
+    });
+
+    expect(fix).toBeNull();
   });
 
   it('returns null when the call has no arguments', () => {
