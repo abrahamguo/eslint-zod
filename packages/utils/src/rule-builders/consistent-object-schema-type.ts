@@ -20,7 +20,7 @@ export function buildConsistentObjectSchemaTypeCreate(
   options: readonly [ConsistentObjectSchemaTypeOptions],
 ) => TSESLint.RuleListener {
   return function create(context, [{ allow: allowedList }]) {
-    const { createSchemaVisitor } = scope.createTracker({ kind: 'value' });
+    const { createSchemaVisitor, collectZodChainMethods } = scope.createTracker({ kind: 'value' });
 
     return createSchemaVisitor({
       schemaType: ZOD_OBJECT_METHODS,
@@ -39,21 +39,25 @@ export function buildConsistentObjectSchemaTypeCreate(
           return;
         }
 
+        // The factory, not `node.callee`: that is the outermost call (`.optional` in `z.object({}).optional()`).
+        // Only `<namespace>.<factory>` can be renamed in place.
+        const factory = collectZodChainMethods(node).at(0)?.member;
+        const factoryName =
+          factory?.object.type === AST_NODE_TYPES.Identifier ? factory.property : null;
+
         context.report({
           node,
           messageId: 'consistentMethod',
           data: { actual: schemaType, allowedList: allowedList.join(',') },
-          // A named import (`object()`) has no property to rename.
-          suggest:
-            callee.type === AST_NODE_TYPES.MemberExpression
-              ? allowedList.map<TSESLint.ReportSuggestionArray<MessageIds>[number]>((it) => ({
-                  messageId: 'useMethod',
-                  data: { expected: it },
-                  fix(fixer): TSESLint.RuleFix {
-                    return fixer.replaceText(callee.property, it);
-                  },
-                }))
-              : [],
+          suggest: factoryName
+            ? allowedList.map<TSESLint.ReportSuggestionArray<MessageIds>[number]>((it) => ({
+                messageId: 'useMethod',
+                data: { expected: it },
+                fix(fixer): TSESLint.RuleFix {
+                  return fixer.replaceText(factoryName, it);
+                },
+              }))
+            : [],
         });
       },
     });

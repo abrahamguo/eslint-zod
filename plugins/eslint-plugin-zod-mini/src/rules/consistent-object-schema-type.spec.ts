@@ -137,5 +137,28 @@ ruleTester.run(consistentObjectSchemaType.name, consistentObjectSchemaType, {
       ],
       output: null,
     },
+    {
+      name: 'the suggestion renames the factory, not the outermost call',
+      code: dedent`
+        import * as z from 'zod/mini';
+        z.strictObject({}).check(z.refine(() => true));
+      `,
+      errors: [
+        {
+          messageId: 'consistentMethod',
+          data: { actual: 'strictObject', allowedList: 'object' },
+          suggestions: [
+            {
+              messageId: 'useMethod',
+              data: { expected: 'object' },
+              output: dedent`
+                import * as z from 'zod/mini';
+                z.object({}).check(z.refine(() => true));
+              `,
+            },
+          ],
+        },
+      ],
+    },
   ],
 });
