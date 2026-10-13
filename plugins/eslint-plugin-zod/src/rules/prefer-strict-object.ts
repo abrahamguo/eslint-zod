@@ -2,6 +2,7 @@ import { zodImportScope } from '@eslint-zod/utils';
 import { buildPreferDedicatedFactoryCreate } from '@eslint-zod/utils/rule-patterns/prefer-dedicated-factory';
 
 import { createZodPluginRule } from '../utils/create-plugin-rule.js';
+import { OBJECT_CATCHALL_METHODS } from '../utils/object-catchall-methods.js';
 
 export const preferStrictObject = createZodPluginRule({
   name: 'prefer-strict-object',
@@ -22,6 +23,7 @@ export const preferStrictObject = createZodPluginRule({
     factoryName: 'object',
     modifierMethods: ['strict'],
     replacementFactoryName: 'strictObject',
+    overridingMethods: OBJECT_CATCHALL_METHODS,
     messageId: 'preferStrictObject',
   }),
 });

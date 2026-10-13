@@ -107,5 +107,14 @@ ruleTester.run(preferStrictObject.name, preferStrictObject, {
       output: null,
       errors: [{ messageId: 'preferStrictObject' }],
     },
+    {
+      name: 'catchall set before the modifier — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        z.object({ a: z.string() }).catchall(z.string()).strict();
+      `,
+      errors: [{ messageId: 'preferStrictObject' }],
+      output: null,
+    },
   ],
 });

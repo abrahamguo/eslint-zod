@@ -2,6 +2,7 @@ import { zodImportScope } from '@eslint-zod/utils';
 import { buildPreferDedicatedFactoryCreate } from '@eslint-zod/utils/rule-patterns/prefer-dedicated-factory';
 
 import { createZodPluginRule } from '../utils/create-plugin-rule.js';
+import { OBJECT_CATCHALL_METHODS } from '../utils/object-catchall-methods.js';
 
 export const preferLooseObject = createZodPluginRule({
   name: 'prefer-loose-object',
@@ -23,6 +24,7 @@ export const preferLooseObject = createZodPluginRule({
     factoryName: 'object',
     modifierMethods: ['passthrough', 'loose'],
     replacementFactoryName: 'looseObject',
+    overridingMethods: OBJECT_CATCHALL_METHODS,
     messageId: 'preferLooseObject',
   }),
 });
