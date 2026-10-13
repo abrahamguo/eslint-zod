@@ -9,10 +9,13 @@ import { createZodPluginRule } from '../utils/create-plugin-rule.js';
  *
  * - `and` / `or` — each call adds an intersection / union branch
  * - `array` — each call wraps the previous schema in another array layer
- * - `check` — each call registers additional `$ZodCheck` validators
+ * - `check` / `with` — each call registers additional `$ZodCheck` validators
  * - `endsWith` / `includes` / `startsWith` / `regex` — each call adds an
  *   independent string constraint; calling one twice with different values
  *   is common (e.g. matching against multiple patterns)
+ * - `extend` / `safeExtend` / `merge` / `omit` / `pick` — each call reshapes the object again
+ * - `meta` — each call merges more metadata
+ * - `multipleOf` — two divisors constrain independently
  * - `overwrite` — each call applies an independent transformation
  * - `pipe` — each call pipes the output through another schema
  * - `refine` / `superRefine` — each call adds an independent refinement
@@ -24,16 +27,24 @@ const EXCLUDED_METHODS = [
   'array',
   'check',
   'endsWith',
+  'extend',
   'includes',
+  'merge',
+  'meta',
+  'multipleOf',
+  'omit',
   'or',
   'overwrite',
+  'pick',
   'pipe',
   'refine',
   'regex',
   'register',
+  'safeExtend',
   'startsWith',
   'superRefine',
   'transform',
+  'with',
 ] as const;
 
 export const noDuplicateSchemaMethods = createZodPluginRule({

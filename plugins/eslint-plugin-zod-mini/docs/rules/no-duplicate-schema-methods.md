@@ -10,7 +10,7 @@
 
 This rule disallows calling the same Zod Mini schema method more than once within a single method chain. Duplicate calls are almost always a mistake — they indicate redundant or conflicting configuration.
 
-Methods that are designed to be chained multiple times, such as `.check()`, `.or()`, and `.and()`, are excluded from this check.
+Methods that are designed to be chained multiple times, such as `.check()` (and its alias `.with()`), `.or()`, and `.and()`, are excluded from this check.
 
 ## Examples
 

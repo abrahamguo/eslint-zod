@@ -8,6 +8,13 @@ const ruleTester = new RuleTester();
 ruleTester.run(noDuplicateSchemaMethods.name, noDuplicateSchemaMethods, {
   valid: [
     {
+      name: 'with() is the alias of check()',
+      code: dedent`
+        import * as z from 'zod/mini';
+        z.string().with(z.minLength(1)).with(z.maxLength(10));
+      `,
+    },
+    {
       name: 'namespace - no duplicate methods',
       code: dedent`
         import * as z from 'zod/mini';

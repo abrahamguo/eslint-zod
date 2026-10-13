@@ -8,6 +8,20 @@ const ruleTester = new RuleTester();
 ruleTester.run(noDuplicateSchemaMethods.name, noDuplicateSchemaMethods, {
   valid: [
     {
+      name: 'methods that are meant to repeat',
+      code: dedent`
+        import * as z from 'zod';
+        z.object({}).extend(A.shape).extend(B.shape);
+        z.object({}).safeExtend(A.shape).safeExtend(B.shape);
+        z.object({}).merge(A).merge(B);
+        z.object({ a: z.string(), b: z.string() }).omit({ a: true }).omit({ b: true });
+        z.object({ a: z.string(), b: z.string() }).pick({ a: true }).pick({ b: true });
+        z.number().multipleOf(4).multipleOf(6);
+        z.string().meta({ a: 1 }).meta({ b: 2 });
+        z.string().with((ctx) => {}).with((ctx) => {});
+      `,
+    },
+    {
       name: 'namespace - no duplicate methods',
       code: dedent`
         import * as z from 'zod';

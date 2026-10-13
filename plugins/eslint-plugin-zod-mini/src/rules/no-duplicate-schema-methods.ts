@@ -8,7 +8,7 @@ import { createZodMiniPluginRule } from '../utils/create-plugin-rule.js';
  * called more than once in a single schema chain in the `zod/mini` API.
  *
  * - `and` / `or` — each call adds an intersection / union branch
- * - `check` — each call registers additional `$ZodCheck` validators (primary
+ * - `check` / `with` — each call registers additional `$ZodCheck` validators (primary
  *   composition mechanism in `zod/mini`; deliberately chainable)
  * - `register` — each call registers the schema in a different registry
  *
@@ -16,7 +16,7 @@ import { createZodMiniPluginRule } from '../utils/create-plugin-rule.js';
  * functions in `zod/mini`, not chain methods, so they never appear as
  * duplicates in a method chain.
  */
-const EXCLUDED_METHODS = ['and', 'check', 'or', 'register'] as const;
+const EXCLUDED_METHODS = ['and', 'check', 'or', 'register', 'with'] as const;
 
 export const noDuplicateSchemaMethods = createZodMiniPluginRule({
   name: 'no-duplicate-schema-methods',

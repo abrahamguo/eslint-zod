@@ -11,6 +11,7 @@
 This rule disallows calling the same Zod schema method more than once within a single method chain. Duplicate calls are almost always a mistake — they are either redundant (e.g. calling `.trim()` twice) or create conflicting constraints (e.g. setting `.min()` twice with different values).
 
 Methods that are designed to be chained multiple times, such as `.or()`, `.and()`, and `.array()`, are excluded from this check. This also includes `.regex()`, `.includes()`, `.startsWith()`, `.endsWith()`, and `.overwrite()`, since each call applies an independent constraint or transformation — matching a string against two different patterns is common, unlike calling `.min()` twice with different values.
+The object reshaping methods (`.extend()`, `.safeExtend()`, `.merge()`, `.omit()`, `.pick()`), `.meta()`, `.multipleOf()` and `.check()` / `.with()` are excluded for the same reason.
 
 A method that changes the schema's type starts a new chain segment:
 the methods after it constrain the new schema, not the one before.
