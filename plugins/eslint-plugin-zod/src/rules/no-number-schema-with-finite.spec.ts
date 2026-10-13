@@ -104,5 +104,17 @@ ruleTester.run(noNumberSchemaWithFinite.name, noNumberSchemaWithFinite, {
       errors: [{ messageId: 'removeFinite' }],
       output: null,
     },
+    {
+      name: 'chain that ends in a property access',
+      code: dedent`
+        import * as z from 'zod';
+        z.number().finite().safeParse(1).success;
+      `,
+      errors: [{ messageId: 'removeFinite' }],
+      output: dedent`
+        import * as z from 'zod';
+        z.number().safeParse(1).success;
+      `,
+    },
   ],
 });

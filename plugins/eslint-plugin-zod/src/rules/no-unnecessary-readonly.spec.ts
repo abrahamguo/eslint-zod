@@ -66,6 +66,15 @@ ruleTester.run(noUnnecessaryReadonly.name, noUnnecessaryReadonly, {
   ],
   invalid: [
     {
+      name: 'property read from the schema — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        z.string().readonly().def.innerType;
+      `,
+      errors: [{ messageId: 'unnecessaryReadonly' }],
+      output: null,
+    },
+    {
       name: 'readonly on a string schema',
       code: dedent`
         import * as z from 'zod';

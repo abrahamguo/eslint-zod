@@ -3,6 +3,7 @@ import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import { buildZodConstraintsRemoveFix } from '../build-zod-constraints-remove-fix.js';
 import { buildZodWrapperUnwrapFix } from '../build-zod-wrapper-unwrap-fix.js';
+import { readsZodSchemaProperty } from '../reads-zod-schema-property.js';
 import { ZOD_IMMUTABLE_SCHEMA_TYPES } from '../zod-immutable-schema-types.js';
 import type { ZodImportScope } from '../zod-import-scope.js';
 import { ZOD_TYPE_CHANGING_METHODS } from '../zod-type-changing-methods.js';
@@ -93,6 +94,8 @@ export function buildNoUnnecessaryReadonlyCreate(
     return createSchemaVisitor({
       onSchema(node, zodSchemaMeta): void {
         const methods = collectZodChainMethods(node);
+        // `….def.innerType` exists on the readonly schema only, so its removal is not offered there.
+        const isFixable = !readsZodSchemaProperty(node, zodSchemaMeta);
 
         // Wrapper form: `z.readonly(inner)` (`zod/mini`).
         if (zodSchemaMeta.schemaType === 'readonly') {
@@ -106,7 +109,9 @@ export function buildNoUnnecessaryReadonlyCreate(
               node: wrapperCall,
               messageId: 'unnecessaryReadonly',
               fix: (fixer) =>
-                buildZodWrapperUnwrapFix({ fixer, sourceCode: context.sourceCode, wrapperCall }),
+                isFixable
+                  ? buildZodWrapperUnwrapFix({ fixer, sourceCode: context.sourceCode, wrapperCall })
+                  : null,
             });
           }
         }
@@ -128,12 +133,14 @@ export function buildNoUnnecessaryReadonlyCreate(
               node: constraint.node,
               messageId: 'unnecessaryReadonly',
               fix: (fixer) =>
-                buildZodConstraintsRemoveFix({
-                  fixer,
-                  methods,
-                  constraints: [constraint],
-                  sourceCode: context.sourceCode,
-                }),
+                isFixable
+                  ? buildZodConstraintsRemoveFix({
+                      fixer,
+                      methods,
+                      constraints: [constraint],
+                      sourceCode: context.sourceCode,
+                    })
+                  : null,
             });
           }
         }

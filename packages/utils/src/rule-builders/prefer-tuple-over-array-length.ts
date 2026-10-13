@@ -4,6 +4,7 @@ import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { buildZodConstraintsRemoveFix } from '../build-zod-constraints-remove-fix.js';
 import type { ZodSchemaConstraint } from '../collect-zod-schema-constraints.js';
 import { readIntegerLiteralValue } from '../read-integer-literal-value.js';
+import { readsZodSchemaProperty } from '../reads-zod-schema-property.js';
 import { canonicalizeZodConstraintName } from '../zod-check-vocabulary.js';
 import type { ZodImportScope } from '../zod-import-scope.js';
 import { ZOD_TYPE_CHANGING_METHODS } from '../zod-type-changing-methods.js';
@@ -137,6 +138,11 @@ export function buildPreferTupleOverArrayLengthCreate(
           node,
           messageId: 'preferTuple',
           fix(fixer) {
+            // The property being read may not exist on the schema the fix builds.
+            if (readsZodSchemaProperty(node, zodSchemaMeta)) {
+              return null;
+            }
+
             // `max` has no behavior-preserving tuple form,
             // and `removable` is null when the constraints don't reduce to a single length.
             if (kind === 'max' || removable === null) {

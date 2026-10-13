@@ -45,6 +45,15 @@ ruleTester.run(preferNullish.name, preferNullish, {
   ],
   invalid: [
     {
+      name: 'property read from the schema — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        z.string().optional().nullable().def.innerType;
+      `,
+      errors: [{ messageId: 'preferNullish' }],
+      output: null,
+    },
+    {
       name: 'optional then nullable',
       code: dedent`
         import * as z from 'zod';

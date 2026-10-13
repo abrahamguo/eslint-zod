@@ -92,8 +92,18 @@ describe('detectZodSchemaRootNode', () => {
     // numberCall's parent is the MemberExpression z.number().min
     const minME = minCall.callee as TSESTree.MemberExpression;
     (numberCall as unknown as Record<string, unknown>).parent = minME;
+    (minME as unknown as Record<string, unknown>).parent = minCall;
 
     expect(detectZodSchemaRootNode(numberCall, imports)).toBeNull();
+  });
+
+  it('detects a call followed only by a property access: z.string().shape', () => {
+    const stringCall = makeCall(makeME(makeIdent('z'), 'string'));
+    const shapeME = makeME(stringCall, 'shape');
+    (stringCall as unknown as Record<string, unknown>).parent = shapeME;
+    (shapeME as unknown as Record<string, unknown>).parent = { type: 'ExpressionStatement' };
+
+    expect(detectZodSchemaRootNode(stringCall, imports)?.schemaType).toBe('string');
   });
 
   it('returns null for calls not in namespaces or named imports', () => {

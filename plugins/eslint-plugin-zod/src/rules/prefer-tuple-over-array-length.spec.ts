@@ -52,6 +52,15 @@ ruleTester.run(preferTupleOverArrayLength.name, preferTupleOverArrayLength, {
   ],
   invalid: [
     {
+      name: 'property read from the schema — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        z.array(z.string()).length(2).element;
+      `,
+      errors: [{ messageId: 'preferTuple' }],
+      output: null,
+    },
+    {
       name: 'length() autofixes to a tuple',
       code: dedent`
         import * as z from 'zod';

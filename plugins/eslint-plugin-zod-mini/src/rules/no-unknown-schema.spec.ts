@@ -74,5 +74,13 @@ ruleTester.run(noUnknownSchema.name, noUnknownSchema, {
       `,
       errors: [{ messageId: 'noZUnknown', line: 2, column: 37, endColumn: 48 }],
     },
+    {
+      name: 'chain that ends in a property access',
+      code: dedent`
+        import * as z from 'zod/mini';
+        z.unknown().safeParse(value).data;
+      `,
+      errors: [{ messageId: 'noZUnknown' }],
+    },
   ],
 });

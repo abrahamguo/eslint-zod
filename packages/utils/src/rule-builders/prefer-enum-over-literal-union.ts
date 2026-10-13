@@ -2,6 +2,7 @@ import type { TSESLint } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import { hasCommentInRange } from '../has-comment-in-range.js';
+import { readsZodSchemaProperty } from '../reads-zod-schema-property.js';
 import type { ZodImportScope } from '../zod-import-scope.js';
 
 export function buildPreferEnumOverLiteralUnionCreate(
@@ -73,6 +74,11 @@ export function buildPreferEnumOverLiteralUnionCreate(
           node,
           messageId: 'useEnum',
           fix(fixer) {
+            // The property being read may not exist on the schema the fix builds.
+            if (readsZodSchemaProperty(node, zodSchemaMeta)) {
+              return null;
+            }
+
             if (zodSchemaMeta.schemaDecl === 'named' || !union.member) {
               return null;
             }

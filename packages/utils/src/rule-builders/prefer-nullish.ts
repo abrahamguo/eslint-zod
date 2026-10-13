@@ -4,6 +4,7 @@ import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { buildZodWrapperUnwrapFix } from '../build-zod-wrapper-unwrap-fix.js';
 import type { ZodSchemaMeta } from '../detect-zod-schema-root-node.js';
 import { hasCommentInRange } from '../has-comment-in-range.js';
+import { readsZodSchemaProperty } from '../reads-zod-schema-property.js';
 import type { ZodChainItem } from '../track-zod-schema-imports.js';
 import type { ZodImportScope } from '../zod-import-scope.js';
 
@@ -111,7 +112,7 @@ export function buildPreferNullishCreate(
     }
 
     /** Chained form (`zod`): `schema.optional().nullable()`. */
-    function handleChained(node: TSESTree.CallExpression): void {
+    function handleChained(node: TSESTree.CallExpression, meta: ZodSchemaMeta): void {
       const methods = collectZodChainMethods(node);
       const optionalIndex = methods.findIndex((it) => it.name === 'optional');
       const nullableIndex = methods.findIndex((it) => it.name === 'nullable');
@@ -132,6 +133,11 @@ export function buildPreferNullishCreate(
         node: later.node,
         messageId: 'preferNullish',
         fix(fixer) {
+          // The property being read may not exist on the schema the fix builds.
+          if (readsZodSchemaProperty(node, meta)) {
+            return null;
+          }
+
           const earlierCallee = earlier.node.callee;
           const laterCallee = later.node.callee;
           if (
@@ -163,7 +169,7 @@ export function buildPreferNullishCreate(
           return;
         }
 
-        handleChained(node);
+        handleChained(node, meta);
       },
     });
   };

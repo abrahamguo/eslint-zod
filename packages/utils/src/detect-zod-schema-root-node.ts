@@ -60,12 +60,17 @@ function isOutermostCallExpression(node: TSESTree.CallExpression): boolean {
     return false;
   }
 
-  // If parent is MemberExpression and parent.object === node => node is part of chain
-  if (parent.type === AST_NODE_TYPES.MemberExpression && parent.object === node) {
-    return false;
+  // Climb the property accesses on top of the call:
+  // it is inner only when they end up being called (`z.string().min`, `z.object({}).shape.a.min`).
+  // In `z.string().safeParse(x).success` nothing is, so the call is the last one of its chain.
+  let child: TSESTree.Node = node;
+  let ancestor: TSESTree.Node = parent;
+  while (ancestor.type === AST_NODE_TYPES.MemberExpression && ancestor.object === child) {
+    child = ancestor;
+    ancestor = ancestor.parent;
   }
 
-  return true;
+  return !(ancestor.type === AST_NODE_TYPES.CallExpression && ancestor.callee === child);
 }
 
 /**
