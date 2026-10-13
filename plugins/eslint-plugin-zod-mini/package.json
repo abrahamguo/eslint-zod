@@ -22,7 +22,8 @@
     "directory": "plugins/eslint-plugin-zod-mini"
   },
   "files": [
-    "dist"
+    "dist",
+    "!dist/ts"
   ],
   "type": "module",
   "main": "./dist/index.mjs",

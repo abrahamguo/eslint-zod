@@ -20,7 +20,8 @@
     "directory": "packages/utils"
   },
   "files": [
-    "dist"
+    "dist",
+    "!dist/ts"
   ],
   "type": "module",
   "sideEffects": false,
