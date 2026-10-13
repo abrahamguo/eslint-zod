@@ -203,5 +203,13 @@ ruleTester.run(noTransformInRecordKey.name, noTransformInRecordKey, {
       `,
       errors: [{ messageId: 'noTransformInRecordKey' }],
     },
+    {
+      name: 'transform on the key of a record with a chained check',
+      code: dedent`
+        import * as z from 'zod/mini';
+        z.record(z.string().check(z.trim()), z.number()).check(z.refine(() => true));
+      `,
+      errors: [{ messageId: 'noTransformInRecordKey' }],
+    },
   ],
 });

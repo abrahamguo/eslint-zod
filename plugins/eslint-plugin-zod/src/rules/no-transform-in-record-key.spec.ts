@@ -8,6 +8,14 @@ const ruleTester = new RuleTester();
 ruleTester.run(noTransformInRecordKey.name, noTransformInRecordKey, {
   valid: [
     {
+      name: 'transform in a method chained on the record, not in its key',
+      code: dedent`
+        import * as z from 'zod';
+        z.record(z.string(), z.number()).pipe(z.string().transform(Number));
+        z.record(z.string(), z.number()).or(z.string().trim());
+      `,
+    },
+    {
       name: 'plain string key without transforms',
       code: dedent`
         import * as z from 'zod';
@@ -338,6 +346,14 @@ ruleTester.run(noTransformInRecordKey.name, noTransformInRecordKey, {
       code: dedent`
         import * as z from 'zod';
         const config = z.record(z.string().slugify(), z.number());
+      `,
+      errors: [{ messageId: 'noTransformInRecordKey' }],
+    },
+    {
+      name: 'transform on the key of a record with a chained method',
+      code: dedent`
+        import * as z from 'zod';
+        z.record(z.string().trim(), z.number()).optional();
       `,
       errors: [{ messageId: 'noTransformInRecordKey' }],
     },

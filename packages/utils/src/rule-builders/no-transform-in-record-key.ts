@@ -17,13 +17,19 @@ export function buildNoTransformInRecordKeyCreate(
   transformNames: ReadonlyArray<string>,
 ): (context: Readonly<TSESLint.RuleContext<MessageIds, []>>) => TSESLint.RuleListener {
   return function create(context) {
-    const { createSchemaVisitor, detectZodSchemaRootNode, collectZodSchemaConstraints } =
-      scope.createTracker({ kind: 'value' });
+    const {
+      createSchemaVisitor,
+      detectZodSchemaRootNode,
+      collectZodChainMethods,
+      collectZodSchemaConstraints,
+    } = scope.createTracker({ kind: 'value' });
 
     return createSchemaVisitor({
       schemaType: 'record',
       onSchema(node): void {
-        const keySchema = node.arguments.at(0);
+        // `node` is the outermost call, which is not the `record()` one once something is chained on it.
+        const recordCall = collectZodChainMethods(node).at(0)?.node ?? node;
+        const keySchema = recordCall.arguments.at(0);
 
         if (keySchema?.type !== AST_NODE_TYPES.CallExpression) {
           return;
