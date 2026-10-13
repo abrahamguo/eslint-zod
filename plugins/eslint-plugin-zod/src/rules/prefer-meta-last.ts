@@ -1,4 +1,4 @@
-import { zodImportScope } from '@eslint-zod/utils';
+import { hasParenthesizedReceiver, zodImportScope } from '@eslint-zod/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import { createZodPluginRule } from '../utils/create-plugin-rule.js';
@@ -57,6 +57,11 @@ export const preferMetaLast = createZodPluginRule({
           node: metaCallCallee.property,
           messageId: 'metaNotLast',
           fix(fixer) {
+            // Cutting at the receiver's end would leave a closing parenthesis behind.
+            if (hasParenthesizedReceiver(metaCallCallee)) {
+              return null;
+            }
+
             const source = context.sourceCode;
 
             // "z.string().meta({...})"

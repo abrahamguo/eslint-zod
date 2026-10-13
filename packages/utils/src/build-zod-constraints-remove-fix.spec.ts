@@ -1,4 +1,5 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { describe, expect, it } from 'vitest';
 
 import { buildZodConstraintsRemoveFix } from './build-zod-constraints-remove-fix.js';
@@ -7,8 +8,19 @@ import type {
   ZodCheckArgumentConstraint,
 } from './collect-zod-schema-constraints.js';
 
-function makeNodeWithRange(start: number, end: number): TSESTree.CallExpression {
-  return { range: [start, end] } as unknown as TSESTree.CallExpression;
+function makeNodeWithRange(
+  start: number,
+  end: number,
+  receiverStart = start,
+): TSESTree.CallExpression {
+  return {
+    range: [start, end],
+    callee: {
+      type: AST_NODE_TYPES.MemberExpression,
+      range: [start, end],
+      object: { range: [receiverStart, end] },
+    },
+  } as unknown as TSESTree.CallExpression;
 }
 
 function makeFixer(): {

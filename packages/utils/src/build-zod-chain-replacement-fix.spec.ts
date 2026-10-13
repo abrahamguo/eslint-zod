@@ -8,6 +8,7 @@ function makeIdent(name: string): TSESTree.Identifier {
   return {
     type: AST_NODE_TYPES.Identifier,
     name,
+    range: [0, 0],
   } as unknown as TSESTree.Identifier;
 }
 
@@ -16,6 +17,7 @@ function makeME(object: TSESTree.Expression, propertyName: string): TSESTree.Mem
     type: AST_NODE_TYPES.MemberExpression,
     object,
     property: makeIdent(propertyName),
+    range: [0, 0],
   } as unknown as TSESTree.MemberExpression;
 }
 

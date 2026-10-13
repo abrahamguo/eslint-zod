@@ -1,4 +1,4 @@
-import { zodImportScope } from '@eslint-zod/utils';
+import { hasParenthesizedReceiver, zodImportScope } from '@eslint-zod/utils';
 
 import { createZodPluginRule } from '../utils/create-plugin-rule.js';
 import { isRecordKeySchema } from '../utils/is-record-key-schema.js';
@@ -56,7 +56,12 @@ export const preferTrimBeforeStringLengthChecks = createZodPluginRule({
           messageId: 'trimBeforeLengthCheck',
           fix(fixer) {
             const { node: trimMethodNode, member: trimCallee } = methods[trimIndex];
-            if (zodSchemaMeta.schemaDecl === 'named' || !trimCallee) {
+            // Cutting at a parenthesized receiver's end would leave its closing parenthesis behind.
+            if (
+              zodSchemaMeta.schemaDecl === 'named' ||
+              !trimCallee ||
+              hasParenthesizedReceiver(trimCallee)
+            ) {
               return null;
             }
 

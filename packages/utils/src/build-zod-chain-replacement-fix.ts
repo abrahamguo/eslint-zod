@@ -1,5 +1,7 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 
+import { hasParenthesizedReceiver } from './has-parenthesized-receiver.js';
+
 /**
  * Utility to generate a fixer for replacing a method chain like z.string().uuid() or z.number().int()
  * with z.uuid() or z.int(), preserving any intermediate methods.
@@ -22,6 +24,15 @@ export function buildZodChainReplacementFix(opts: {
   const toNode = methods[toIndex]?.node as TSESTree.CallExpression | undefined;
 
   if (!fromNode || !toNode) {
+    return null;
+  }
+
+  // The suffixes below are sliced by text, which a parenthesized receiver would throw off.
+  if (
+    methods
+      .slice(fromIndex + 1, toIndex + 1)
+      .some((m) => hasParenthesizedReceiver(m.node.callee as TSESTree.MemberExpression))
+  ) {
     return null;
   }
 

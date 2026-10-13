@@ -162,5 +162,13 @@ ruleTester.run(requireBrandTypeParameter.name, requireBrandTypeParameter, {
                 z.string().min(1).max(2)
               `,
     ),
+    {
+      name: 'parenthesized receiver — reported without the suggestion',
+      code: dedent`
+        import * as z from 'zod';
+        (z.string()).brand();
+      `,
+      errors: [{ messageId: 'missingTypeParameter' }],
+    },
   ],
 });

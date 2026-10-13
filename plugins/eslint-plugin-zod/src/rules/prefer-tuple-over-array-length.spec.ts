@@ -228,5 +228,14 @@ ruleTester.run(preferTupleOverArrayLength.name, preferTupleOverArrayLength, {
       errors: [{ messageId: 'preferTuple' }],
       output: null,
     },
+    {
+      name: 'parenthesized receiver — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        (z.array(z.string())).length(2);
+      `,
+      errors: [{ messageId: 'preferTuple' }],
+      output: null,
+    },
   ],
 });

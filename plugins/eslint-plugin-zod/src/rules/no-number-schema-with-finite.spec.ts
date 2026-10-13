@@ -84,5 +84,14 @@ ruleTester.run(noNumberSchemaWithFinite.name, noNumberSchemaWithFinite, {
       errors: [{ messageId: 'removeFinite' }],
       output: null,
     },
+    {
+      name: 'parenthesized receiver — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        (z.number()).finite();
+      `,
+      errors: [{ messageId: 'removeFinite' }],
+      output: null,
+    },
   ],
 });

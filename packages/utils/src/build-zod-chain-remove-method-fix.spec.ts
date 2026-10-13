@@ -1,10 +1,22 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { describe, expect, it } from 'vitest';
 
 import { buildZodChainRemoveMethodFix } from './build-zod-chain-remove-method-fix.js';
 
-function makeNodeWithRange(start: number, end: number): TSESTree.CallExpression {
-  return { range: [start, end] } as unknown as TSESTree.CallExpression;
+function makeNodeWithRange(
+  start: number,
+  end: number,
+  receiverStart = start,
+): TSESTree.CallExpression {
+  return {
+    range: [start, end],
+    callee: {
+      type: AST_NODE_TYPES.MemberExpression,
+      range: [start, end],
+      object: { range: [receiverStart, end] },
+    },
+  } as unknown as TSESTree.CallExpression;
 }
 
 function makeFixer(): {
@@ -22,6 +34,15 @@ function makeFixer(): {
 }
 
 describe('buildZodChainRemoveMethodFix', () => {
+  it('returns null when the receiver is parenthesized: (z.number()).finite()', () => {
+    const { fixer } = makeFixer();
+    const methods = [
+      { name: 'number', node: makeNodeWithRange(1, 11) },
+      { name: 'finite', node: makeNodeWithRange(0, 21, 1) },
+    ];
+    expect(buildZodChainRemoveMethodFix({ fixer, methods, removeIndex: 1 })).toBeNull();
+  });
+
   it('returns null when removeIndex < 1', () => {
     const { fixer } = makeFixer();
     const methods = [{ name: 'number', node: makeNodeWithRange(0, 10) }];

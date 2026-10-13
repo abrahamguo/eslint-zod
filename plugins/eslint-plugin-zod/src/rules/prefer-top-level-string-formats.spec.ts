@@ -167,5 +167,14 @@ ruleTester.run(preferTopLevelStringFormats.name, preferTopLevelStringFormats, {
       errors: [{ messageId: 'preferTopLevelStringFormat' }] as const,
       output: null,
     },
+    {
+      name: 'parenthesized receiver — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        (z.string()).email();
+      `,
+      errors: [{ messageId: 'preferTopLevelStringFormat' }],
+      output: null,
+    },
   ],
 });

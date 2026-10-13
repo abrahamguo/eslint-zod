@@ -205,5 +205,14 @@ ruleTester.run(noUnnecessaryReadonly.name, noUnnecessaryReadonly, {
         string();
       `,
     },
+    {
+      name: 'parenthesized receiver — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        (z.string()).readonly();
+      `,
+      errors: [{ messageId: 'unnecessaryReadonly' }],
+      output: null,
+    },
   ],
 });

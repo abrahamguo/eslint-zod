@@ -197,5 +197,14 @@ ruleTester.run(preferMetaLast.name, preferMetaLast, {
         })
       `,
     },
+    {
+      name: 'parenthesized receiver — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        (z.string()).meta({ foo: "bar" }).min(1);
+      `,
+      errors: [{ messageId: 'metaNotLast' }],
+      output: null,
+    },
   ],
 });

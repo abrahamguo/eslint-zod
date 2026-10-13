@@ -54,6 +54,7 @@ AST parsing, import tracking, traversal, and fixer helpers.
 **Fixer helpers**
 
 - `buildZodChainRemoveMethodFix(opts)` — remove one method from a chain
+- `hasParenthesizedReceiver(member)` — whether a member expression's object is wrapped in parentheses (`(z.string()).min(1)`), where a fixer cutting at the object's end would leave the closing parenthesis behind
 - `buildZodChainReplacementFix(opts)` — replace a run of methods
 - `buildZodConstraintsRemoveFix(opts)` — remove a set of `ZodSchemaConstraint`s (chained or check-argument)
 - `buildZodWrapperUnwrapFix(opts)` — replace a single-argument wrapper call with its argument

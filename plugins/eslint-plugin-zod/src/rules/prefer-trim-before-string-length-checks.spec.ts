@@ -168,5 +168,14 @@ ruleTester.run(preferTrimBeforeStringLengthChecks.name, preferTrimBeforeStringLe
       errors: [{ messageId: 'trimBeforeLengthCheck' }],
       output: null,
     },
+    {
+      name: 'parenthesized receiver — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        (z.string().min(1)).trim();
+      `,
+      errors: [{ messageId: 'trimBeforeLengthCheck' }],
+      output: null,
+    },
   ],
 });

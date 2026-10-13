@@ -1,6 +1,7 @@
 import type { TSESLint } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
+import { hasParenthesizedReceiver } from '../has-parenthesized-receiver.js';
 import type { ZodImportScope } from '../zod-import-scope.js';
 
 type MessageIds = 'missingTypeParameter' | 'removeBrandFunction';
@@ -42,14 +43,17 @@ export function buildRequireBrandTypeParameterCreate(
         context.report({
           messageId: 'missingTypeParameter',
           node: brandCalleeNode.property,
-          suggest: [
-            {
-              messageId: 'removeBrandFunction',
-              fix(fixer): TSESLint.RuleFix {
-                return fixer.removeRange([brandCalleeNode.object.range[1], brandNode.range[1]]);
-              },
-            },
-          ],
+          // Cutting at the receiver's end would leave a closing parenthesis behind.
+          suggest: hasParenthesizedReceiver(brandCalleeNode)
+            ? []
+            : [
+                {
+                  messageId: 'removeBrandFunction',
+                  fix(fixer): TSESLint.RuleFix {
+                    return fixer.removeRange([brandCalleeNode.object.range[1], brandNode.range[1]]);
+                  },
+                },
+              ],
         });
       },
     });

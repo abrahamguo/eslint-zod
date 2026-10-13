@@ -209,5 +209,14 @@ ruleTester.run(preferStringLengthOverMinMax.name, preferStringLengthOverMinMax, 
         z.object({ code: z.string().length(3) })
       `,
     },
+    {
+      name: 'parenthesized receiver — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        (z.string().min(3)).max(3);
+      `,
+      errors: [{ messageId: 'preferStringLength' }],
+      output: null,
+    },
   ],
 });
