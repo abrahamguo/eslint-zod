@@ -2,6 +2,7 @@
 export type {
   ZodChainItem,
   ZodChainMember,
+  ZodChainedMethodMatch,
   ZodImportBinding,
   ZodImportKind,
   ZodSchemaImportTracker,

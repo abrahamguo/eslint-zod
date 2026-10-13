@@ -1,7 +1,6 @@
 import type { TSESLint } from '@typescript-eslint/utils';
 
 import { buildZodChainReplacementFix } from '../build-zod-chain-replacement-fix.js';
-import { getZodChainedMethodNames } from '../get-zod-chained-method-names.js';
 import type { ZodImportScope } from '../zod-import-scope.js';
 
 /** A deprecated chained method paired with the top-level factory replacing it. */
@@ -45,7 +44,8 @@ export function buildPreferTopLevelFactoryCreate<
   const { scope, factoryName, replacements, messageId, ignore = [] } = options;
 
   const ignored = new Set(ignore);
-  const replacementBySource = new Map(
+  // A plain object so the lookup types as `string`: the match is always one of its keys.
+  const replacementBySource: Record<string, string> = Object.fromEntries(
     replacements
       .filter(({ sourceMethodName }) => !ignored.has(sourceMethodName))
       .map(({ sourceMethodName, replacementMethodName }) => [
@@ -53,57 +53,46 @@ export function buildPreferTopLevelFactoryCreate<
         replacementMethodName,
       ]),
   );
+  const sourceMethodNames = Object.keys(replacementBySource);
 
   return function create(context) {
     const { sourceCode } = context;
 
-    const { createSchemaVisitor, collectZodChainMethods } = scope.createTracker({ kind: 'value' });
+    const { createSchemaVisitor, findZodChainedMethod } = scope.createTracker({ kind: 'value' });
 
     return createSchemaVisitor({
       schemaType: factoryName,
       onSchema(node, zodSchemaMeta): void {
-        const methods = collectZodChainMethods(node);
+        const found = findZodChainedMethod(node, zodSchemaMeta, sourceMethodNames);
+        if (found === null) {
+          return;
+        }
 
         // A walkable chain always starts at the factory.
         // A different name there means it was imported under an alias (`import { string as str }`),
         // so no method in this chain is chained on `<factoryName>()`.
-        if (methods.length > 0 && methods[0].name !== factoryName) {
+        if (found.methods.length > 0 && found.methods[0].name !== factoryName) {
           return;
         }
 
-        const chainedMethod = methods.find(
-          (it, index) => index > 0 && replacementBySource.has(it.name),
-        );
-
-        // The fallback covers a chain the walker cannot name (`z['string']().uuid()`),
-        // where detection still names the methods.
-        const sourceMethodName =
-          chainedMethod?.name ??
-          getZodChainedMethodNames(zodSchemaMeta).find((name) => replacementBySource.has(name));
-
-        const replacementMethodName =
-          sourceMethodName === undefined ? undefined : replacementBySource.get(sourceMethodName);
-
-        if (replacementMethodName === undefined) {
-          return;
-        }
+        const replacementMethodName = replacementBySource[found.name];
 
         context.report({
           node,
           messageId,
-          data: { sourceMethod: sourceMethodName, replacementMethod: replacementMethodName },
+          data: { sourceMethod: found.name, replacementMethod: replacementMethodName },
           fix(fixer) {
-            if (!chainedMethod || zodSchemaMeta.schemaDecl === 'named') {
+            if (found.member === null || zodSchemaMeta.schemaDecl === 'named') {
               return null;
             }
 
             return buildZodChainReplacementFix({
               sourceCode,
               fixer,
-              methods,
+              methods: found.methods,
               // The factory is always the first chain item.
               fromIndex: 0,
-              toIndex: methods.indexOf(chainedMethod),
+              toIndex: found.index,
               toMethodName: replacementMethodName,
             });
           },

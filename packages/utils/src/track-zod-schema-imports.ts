@@ -6,6 +6,7 @@ import type { ZodSchemaConstraint } from './collect-zod-schema-constraints.js';
 import { detectZodSchemaRootNode, isZodSchemaOfType } from './detect-zod-schema-root-node.js';
 import type { ZodImports, ZodSchemaMeta } from './detect-zod-schema-root-node.js';
 import { getStaticPropertyName } from './get-static-property-name.js';
+import { getZodChainedMethodNames } from './get-zod-chained-method-names.js';
 import type { ZodImportScope } from './zod-import-scope.js';
 
 /** One zod import: the export it names, its local identifier, and the declaration carrying it. */
@@ -47,6 +48,21 @@ export interface ZodChainItem {
   name: string;
   node: TSESTree.CallExpression;
   /** The call's callee; `null` only for a bare named-import factory (`string()`), so never past index 0. */
+  member: ZodChainMember | null;
+}
+
+/** What {@link ZodSchemaImportTracker.findZodChainedMethod} found. */
+export interface ZodChainedMethodMatch {
+  /** The matched method name — one of the names asked for. */
+  name: string;
+
+  /** The chain from `collectZodChainMethods`. */
+  methods: Array<ZodChainItem>;
+
+  /** Index of the match in `methods`, `-1` when the walker could not name the matched call. */
+  index: number;
+
+  /** The matched call's callee, `null` whenever `index` is `-1` — report without a fix. */
   member: ZodChainMember | null;
 }
 
@@ -160,6 +176,21 @@ export interface ZodSchemaImportTracker {
   collectZodChainMethods: (node: TSESTree.CallExpression) => Array<ZodChainItem>;
 
   /**
+   * Locates a method chained onto a schema — one name, or the first chained of several.
+   * Presence is decided on `getZodChainedMethodNames`,
+   * so an aliased factory (`import { number as finite }`) is not a match
+   * and a computed factory (`z['number']().finite()`) still is.
+   *
+   * `null` means not chained: do not report.
+   * A match with `member: null` means chained but unnameable: report without a fix.
+   */
+  findZodChainedMethod: (
+    node: TSESTree.CallExpression,
+    meta: ZodSchemaMeta,
+    methodName: string | ReadonlyArray<string>,
+  ) => ZodChainedMethodMatch | null;
+
+  /**
    * Flattens a zod call chain into the constraints applied to the schema,
    * seen uniformly across API styles:
    * chained methods (`z.string().min(2)`, `zod`) become `chained` constraints,
@@ -262,6 +293,24 @@ export function trackZodSchemaImports(
 
     chainCache.set(node, methods);
     return methods;
+  }
+
+  function findZodChainedMethod(
+    node: TSESTree.CallExpression,
+    meta: ZodSchemaMeta,
+    methodName: string | ReadonlyArray<string>,
+  ): ZodChainedMethodMatch | null {
+    const wanted = typeof methodName === 'string' ? [methodName] : methodName;
+    const name = getZodChainedMethodNames(meta).find((it) => wanted.includes(it));
+    if (name === undefined) {
+      return null;
+    }
+
+    const methods = collectZodChainMethods(node);
+    // Skip index 0: the factory, which shares the name only by coincidence (`z.finite()`).
+    const index = methods.findIndex((it, i) => i > 0 && it.name === name);
+
+    return { name, methods, index, member: methods[index]?.member ?? null };
   }
 
   // to be inserted into rule.create()
@@ -385,6 +434,8 @@ export function trackZodSchemaImports(
     detectZodSchemaRootNode: (node) => detectZodSchemaRootNode(node, imports),
 
     collectZodChainMethods,
+
+    findZodChainedMethod,
 
     collectZodSchemaConstraints: (node) =>
       collectZodSchemaConstraints({

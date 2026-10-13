@@ -1,8 +1,4 @@
-import {
-  buildZodChainRemoveMethodFix,
-  getZodChainedMethodNames,
-  zodImportScope,
-} from '@eslint-zod/utils';
+import { buildZodChainRemoveMethodFix, zodImportScope } from '@eslint-zod/utils';
 
 import { createZodPluginRule } from '../utils/create-plugin-rule.js';
 
@@ -24,37 +20,31 @@ export const noNumberSchemaWithFinite = createZodPluginRule({
   defaultOptions: [],
 
   create(context) {
-    const { createSchemaVisitor, collectZodChainMethods } = zodImportScope.createTracker({
+    const { createSchemaVisitor, findZodChainedMethod } = zodImportScope.createTracker({
       kind: 'value',
     });
 
     return createSchemaVisitor({
       schemaType: 'number',
       onSchema(node, zodSchemaMeta): void {
-        // Detect on the names alone: they exclude the factory,
-        // so an aliased named import (`import { number as finite }`) is not mistaken for a `.finite()` call,
-        // and a computed factory (`z['number']().finite()`) is still caught even though the chain walker cannot name it.
-        if (!getZodChainedMethodNames(zodSchemaMeta).includes('finite')) {
+        const finite = findZodChainedMethod(node, zodSchemaMeta, 'finite');
+        if (finite === null) {
           return;
         }
-
-        const methods = collectZodChainMethods(node);
-        // Skip index 0 — that item is the `number()` factory itself.
-        const finiteIndex = methods.findIndex((m, index) => index > 0 && m.name === 'finite');
 
         context.report({
           node,
           messageId: 'removeFinite',
           fix(fixer) {
-            // A computed factory leaves `finiteIndex` at -1 — unfixable.
-            if (finiteIndex === -1) {
+            // A computed factory (`z['number']().finite()`) is reported without a fix.
+            if (finite.member === null) {
               return null;
             }
 
             return buildZodChainRemoveMethodFix({
               fixer,
-              methods,
-              removeIndex: finiteIndex,
+              methods: finite.methods,
+              removeIndex: finite.index,
             });
           },
         });

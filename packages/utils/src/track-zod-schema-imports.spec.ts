@@ -2,6 +2,7 @@ import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { describe, expect, it } from 'vitest';
 
+import type { ZodSchemaMeta } from './detect-zod-schema-root-node.js';
 import { zodImportScope, zodMiniImportScope } from './zod-import-scope.js';
 
 // --- minimal AST mock helpers ---
@@ -263,6 +264,77 @@ describe('collectZodChainMethods', () => {
 
       expect(tracker.collectZodChainMethods(dynamicCall)).toStrictEqual([]);
     });
+  });
+});
+
+describe('findZodChainedMethod', () => {
+  function meta(schemaDecl: ZodSchemaMeta['schemaDecl'], methods: Array<string>): ZodSchemaMeta {
+    return { schemaDecl, schemaType: 'number', methods };
+  }
+
+  it('returns null when the method is not chained: z.number().min(0)', () => {
+    const tracker = zodImportScope.createTracker({ kind: 'value' });
+    const minCall = makeCall(makeME(makeCall(makeME(makeIdent('z'), 'number')), 'min'));
+
+    expect(
+      tracker.findZodChainedMethod(minCall, meta('namespace', ['number', 'min']), 'finite'),
+    ).toBeNull();
+  });
+
+  it('finds a chained method with its callee: z.number().min(0).finite()', () => {
+    const tracker = zodImportScope.createTracker({ kind: 'value' });
+    const minCall = makeCall(makeME(makeCall(makeME(makeIdent('z'), 'number')), 'min'));
+    const finiteCall = makeCall(makeME(minCall, 'finite'));
+
+    const found = tracker.findZodChainedMethod(
+      finiteCall,
+      meta('namespace', ['number', 'min', 'finite']),
+      'finite',
+    );
+
+    expect(found).toStrictEqual({
+      name: 'finite',
+      methods: tracker.collectZodChainMethods(finiteCall),
+      index: 2,
+      member: finiteCall.callee,
+    });
+  });
+
+  it('takes the first chained of several names: z.number().safe().int()', () => {
+    const tracker = zodImportScope.createTracker({ kind: 'value' });
+    const safeCall = makeCall(makeME(makeCall(makeME(makeIdent('z'), 'number')), 'safe'));
+    const intCall = makeCall(makeME(safeCall, 'int'));
+
+    const found = tracker.findZodChainedMethod(
+      intCall,
+      meta('namespace', ['number', 'safe', 'int']),
+      ['int', 'safe'],
+    );
+
+    expect(found?.name).toBe('safe');
+    expect(found?.index).toBe(1);
+  });
+
+  it('does not mistake an aliased factory for the method: import { number as finite }; finite().min(0)', () => {
+    const tracker = zodImportScope.createTracker({ kind: 'value' });
+    const minCall = makeCall(makeME(makeCall(makeIdent('finite')), 'min'));
+
+    expect(tracker.findZodChainedMethod(minCall, meta('named', ['min']), 'finite')).toBeNull();
+  });
+
+  it("matches without a callee when the chain is unnameable: z['number']().finite()", () => {
+    const tracker = zodImportScope.createTracker({ kind: 'value' });
+    const computedCallee = {
+      type: AST_NODE_TYPES.MemberExpression,
+      object: makeIdent('z'),
+      property: { type: AST_NODE_TYPES.Literal, value: 'number' },
+      computed: true,
+    } as unknown as TSESTree.MemberExpression;
+    const finiteCall = makeCall(makeME(makeCall(computedCallee), 'finite'));
+
+    expect(
+      tracker.findZodChainedMethod(finiteCall, meta('namespace', ['number', 'finite']), 'finite'),
+    ).toStrictEqual({ name: 'finite', methods: [], index: -1, member: null });
   });
 });
 
