@@ -8,6 +8,14 @@ const ruleTester = new RuleTester();
 ruleTester.run(noConflictingChecks.name, noConflictingChecks, {
   valid: [
     {
+      name: 'a zero divisor is left alone',
+      code: dedent`
+        import * as z from 'zod/mini';
+        z.bigint().check(z.multipleOf(0n), z.multipleOf(2n));
+        z.literal(5n).check(z.multipleOf(0n));
+      `,
+    },
+    {
       name: 'compatible string bounds',
       code: dedent`
         import * as z from 'zod/mini';

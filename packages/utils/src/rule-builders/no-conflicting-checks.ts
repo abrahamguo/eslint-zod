@@ -457,7 +457,8 @@ export function buildNoConflictingChecksCreate(
         const left = asNumeric(a.literalValue)!;
         for (const b of multiples.slice(index + 1)) {
           const right = asNumeric(b.literalValue)!;
-          if (typeof left !== typeof right) {
+          // A zero divisor never divides anything, and `%` throws on a zero bigint.
+          if (typeof left !== typeof right || !left || !right) {
             continue;
           }
           if (left === right) {
@@ -516,6 +517,9 @@ export function buildNoConflictingChecksCreate(
       }
       if (multipleOf) {
         const divisor = asNumeric(check.literalValue);
+        if (!divisor) {
+          return undefined;
+        }
         if (typeof literal === 'number' && typeof divisor === 'number') {
           return literal % divisor === 0;
         }
