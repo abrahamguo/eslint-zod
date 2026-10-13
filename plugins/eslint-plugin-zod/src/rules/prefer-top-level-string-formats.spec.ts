@@ -148,13 +148,6 @@ ruleTester.run(preferTopLevelStringFormats.name, preferTopLevelStringFormats, {
       name: 'unrelated to zod',
       code: 'something.string().email()',
     },
-    {
-      name: 'string factory aliased on import — the chain has no `string` method to replace',
-      code: dedent`
-        import { string as str } from 'zod';
-        str().email();
-      `,
-    },
   ],
   invalid: [
     ...invalid,
@@ -203,6 +196,15 @@ ruleTester.run(preferTopLevelStringFormats.name, preferTopLevelStringFormats, {
           .email();
       `,
       errors: [{ messageId: 'preferTopLevelStringFormat' }],
+      output: null,
+    },
+    {
+      name: 'string factory aliased on import — reported like any named import, without a fix',
+      code: dedent`
+        import { string as str } from 'zod';
+        str().email();
+      `,
+      errors: [{ messageId: 'preferTopLevelStringFormat' }] as const,
       output: null,
     },
   ],

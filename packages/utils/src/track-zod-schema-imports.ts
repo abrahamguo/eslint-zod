@@ -242,8 +242,8 @@ export function trackZodSchemaImports(
   const zodNamedImportsByOriginal = new Map<string, string>();
   const bindings: Array<ZodImportBinding> = [];
 
-  // Safe to cache: the walk is purely syntactic and never reads the import maps,
-  // which keep filling up as `ImportDeclaration` nodes are visited.
+  // Safe to cache: the walk only reads the import map for the head of a named-import chain,
+  // and imports are visited before the code that uses them.
   const chainCache = new WeakMap<TSESTree.CallExpression, Array<ZodChainItem>>();
 
   function collectZodChainMethods(node: TSESTree.CallExpression): Array<ZodChainItem> {
@@ -273,7 +273,8 @@ export function trackZodSchemaImports(
       // Match named import: number(), int(), etc.
       if (callee.type === AST_NODE_TYPES.Identifier) {
         methods.unshift({
-          name: callee.name,
+          // the export name, so an aliased import (`import { custom as c }`) is still found by name
+          name: imports.named.get(callee.name) ?? callee.name,
           node: current,
           member: null,
         });

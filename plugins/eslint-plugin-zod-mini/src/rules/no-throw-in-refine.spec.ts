@@ -217,5 +217,15 @@ ruleTester.run(noThrowInRefine.name, noThrowInRefine, {
       `,
       errors: [{ messageId: 'noThrowInRefine' }, { messageId: 'noThrowInRefine' }],
     },
+    {
+      name: 'refine imported under an alias',
+      code: dedent`
+        import { string, refine as r } from 'zod/mini';
+        string().check(r(() => {
+          throw new Error('x');
+        }));
+      `,
+      errors: [{ messageId: 'noThrowInRefine' }],
+    },
   ],
 });

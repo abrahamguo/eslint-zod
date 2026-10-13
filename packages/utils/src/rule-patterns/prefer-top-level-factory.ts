@@ -76,9 +76,8 @@ export function buildPreferTopLevelFactoryCreate<
           return;
         }
 
-        // A walkable chain always starts at the factory.
-        // A different name there means it was imported under an alias (`import { string as str }`),
-        // so no method in this chain is chained on `<factoryName>()`.
+        // A chain that does not start at the factory resumes after a property access
+        // (`z.string().foo.email()`), so its methods are not chained on `<factoryName>()`.
         if (found.methods.length > 0 && found.methods[0].name !== factoryName) {
           return;
         }

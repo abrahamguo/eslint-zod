@@ -8,6 +8,13 @@ const ruleTester = new RuleTester();
 ruleTester.run(preferNullish.name, preferNullish, {
   valid: [
     {
+      name: 'factory aliased to `optional` is still a string schema',
+      code: dedent`
+        import { string as optional } from 'zod';
+        optional().nullable();
+      `,
+    },
+    {
       name: 'already using nullish',
       code: dedent`
         import * as z from 'zod';
@@ -124,15 +131,6 @@ ruleTester.run(preferNullish.name, preferNullish, {
         import { string } from 'zod';
         string().nullish();
       `,
-    },
-    {
-      name: 'factory aliased to `optional` — reported, but the pair cannot be merged',
-      code: dedent`
-        import { string as optional } from 'zod';
-        optional().nullable();
-      `,
-      errors: [{ messageId: 'preferNullish' }],
-      output: null,
     },
     {
       name: 'named import used as an object — reported, but renaming the callee would delete the member call',

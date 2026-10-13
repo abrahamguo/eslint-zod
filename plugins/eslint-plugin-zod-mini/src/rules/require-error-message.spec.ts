@@ -293,5 +293,14 @@ ruleTester.run(`${requireErrorMessage.name} (object)`, requireErrorMessage, {
       errors: [{ messageId: 'requireErrorMessage' }],
       output: null,
     },
+    {
+      name: 'refine imported under an alias',
+      code: dedent`
+        import { string, refine as r } from 'zod/mini';
+        string().check(r(() => true));
+      `,
+      errors: [{ messageId: 'requireErrorMessage' }],
+      output: null,
+    },
   ],
 });

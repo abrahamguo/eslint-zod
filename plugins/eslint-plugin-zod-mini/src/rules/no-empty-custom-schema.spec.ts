@@ -96,5 +96,13 @@ ruleTester.run(noEmptyCustomSchema.name, noEmptyCustomSchema, {
       `,
       errors: [{ messageId: 'noEmptyCustomSchema' }],
     },
+    {
+      name: 'custom imported under an alias',
+      code: dedent`
+        import { custom as c } from 'zod/mini';
+        c();
+      `,
+      errors: [{ messageId: 'noEmptyCustomSchema' }],
+    },
   ],
 });

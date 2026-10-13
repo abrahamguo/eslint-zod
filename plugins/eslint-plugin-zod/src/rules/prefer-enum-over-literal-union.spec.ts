@@ -220,5 +220,14 @@ ruleTester.run(preferEnumOverLiteralUnion.name, preferEnumOverLiteralUnion, {
       errors: [{ messageId: 'useEnum' }],
       output: null,
     },
+    {
+      name: 'union imported under an alias',
+      code: dedent`
+        import { union as u, literal } from 'zod';
+        u([literal('a'), literal('b')]);
+      `,
+      errors: [{ messageId: 'useEnum' }],
+      output: null,
+    },
   ],
 });
