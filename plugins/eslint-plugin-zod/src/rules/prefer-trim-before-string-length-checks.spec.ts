@@ -8,6 +8,14 @@ const ruleTester = new RuleTester();
 ruleTester.run(preferTrimBeforeStringLengthChecks.name, preferTrimBeforeStringLengthChecks, {
   valid: [
     {
+      name: 'key schema of partialRecord and looseRecord',
+      code: dedent`
+        import * as z from 'zod';
+        z.partialRecord(z.string().min(1).trim(), z.number());
+        z.looseRecord(z.string().min(1).trim(), z.number());
+      `,
+    },
+    {
       name: 'trim before min',
       code: dedent`
           import * as z from "zod";

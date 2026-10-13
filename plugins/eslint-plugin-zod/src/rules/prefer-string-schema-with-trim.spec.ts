@@ -8,6 +8,14 @@ const ruleTester = new RuleTester();
 ruleTester.run(preferStringSchemaWithTrim.name, preferStringSchemaWithTrim, {
   valid: [
     {
+      name: 'key schema of partialRecord and looseRecord',
+      code: dedent`
+        import * as z from 'zod';
+        z.partialRecord(z.string(), z.number());
+        z.looseRecord(z.string(), z.number());
+      `,
+    },
+    {
       name: 'namespace import',
       code: dedent`
         import * as z from "zod";
