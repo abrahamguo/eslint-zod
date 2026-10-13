@@ -44,10 +44,12 @@ z.number().safe().min(1);
 z.int().min(1);
 ```
 
-The rule reports but does **not** fix two cases, because the replacement cannot be written safely:
+The rule reports but does **not** fix these cases, because the replacement cannot be written safely:
 
 - A named import (`import { number } from 'zod'; number().safe()`) — the fix would need a new import for the top-level factory
 - A chain reached through a computed member (`z['number']().safe()`), which the chain walker cannot name
+- A factory called with arguments (`z.number({ error: '…' }).safe()`), which the replacement would drop
+- A type-changing method before the deprecated one, which the replacement would then run ahead of
 
 ## When Not To Use It
 

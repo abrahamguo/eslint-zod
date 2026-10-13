@@ -176,5 +176,23 @@ ruleTester.run(preferTopLevelStringFormats.name, preferTopLevelStringFormats, {
       errors: [{ messageId: 'preferTopLevelStringFormat' }],
       output: null,
     },
+    {
+      name: 'mutating method before the format — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        z.string().trim().email();
+      `,
+      errors: [{ messageId: 'preferTopLevelStringFormat' }] as const,
+      output: null,
+    },
+    {
+      name: 'factory called with params — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        z.string({ error: 'Required' }).email();
+      `,
+      errors: [{ messageId: 'preferTopLevelStringFormat' }] as const,
+      output: null,
+    },
   ],
 });

@@ -69,10 +69,12 @@ z.string().email().min(1);
 z.email().min(1);
 ```
 
-The rule reports but does **not** fix two cases, because the replacement cannot be written safely:
+The rule reports but does **not** fix these cases, because the replacement cannot be written safely:
 
 - A named import (`import { string } from 'zod'; string().email()`) — the fix would need a new import for the top-level factory
 - A chain reached through a computed member (`z['string']().email()`), which the chain walker cannot name
+- A factory called with arguments (`z.string({ error: '…' }).email()`), which the replacement would drop
+- A mutating or type-changing method before the deprecated one (`z.string().trim().email()`), which the format would then run ahead of
 
 ## When Not To Use It
 

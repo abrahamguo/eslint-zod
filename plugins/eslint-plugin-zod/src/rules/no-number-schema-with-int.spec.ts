@@ -145,5 +145,14 @@ ruleTester.run(noNumberSchemaWithInt.name, noNumberSchemaWithInt, {
       errors: [{ messageId: 'removeNumber' }],
       output: null,
     },
+    {
+      name: 'factory called with params — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        z.number({ error: 'e' }).int();
+      `,
+      errors: [{ messageId: 'removeNumber' }],
+      output: null,
+    },
   ],
 });
