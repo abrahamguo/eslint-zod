@@ -105,10 +105,10 @@ ruleTester.run(preferMetaLast.name, preferMetaLast, {
       `,
     },
     {
-      name: 'a factory named meta is not the method',
+      name: 'a factory imported as meta is not the method',
       code: dedent`
-        import { meta } from 'zod';
-        meta({ foo: "bar" }).unknownMethod();
+        import { string as meta } from 'zod';
+        meta().min(1);
       `,
     },
   ],

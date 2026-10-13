@@ -11,7 +11,7 @@ ruleTester.run(noTransformInRecordKey.name, noTransformInRecordKey, {
       name: 'transform in a method chained on the record, not in its key',
       code: dedent`
         import * as z from 'zod';
-        z.record(z.string(), z.number()).pipe(z.string().transform(Number));
+        z.record(z.string(), z.number()).pipe(z.transform((value) => Object.keys(value)));
         z.record(z.string(), z.number()).or(z.string().trim());
       `,
     },

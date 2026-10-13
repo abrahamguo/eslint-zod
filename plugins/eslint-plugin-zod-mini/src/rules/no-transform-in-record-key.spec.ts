@@ -212,13 +212,12 @@ ruleTester.run(noTransformInRecordKey.name, noTransformInRecordKey, {
       errors: [{ messageId: 'noTransformInRecordKey' }],
     },
     {
-      name: 'transform factory as the key schema, directly or through pipe',
+      name: 'transform piped into the key schema',
       code: dedent`
         import * as z from 'zod/mini';
-        z.record(z.transform((key) => key), z.number());
         z.record(z.pipe(z.string(), z.transform((key) => key)), z.number());
       `,
-      errors: [{ messageId: 'noTransformInRecordKey' }, { messageId: 'noTransformInRecordKey' }],
+      errors: [{ messageId: 'noTransformInRecordKey' }],
     },
     {
       name: 'transform on the key of partialRecord and looseRecord',

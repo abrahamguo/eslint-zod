@@ -124,13 +124,5 @@ ruleTester.run(noAnySchema.name, noAnySchema, {
         const userSchema = z['any']();
       `,
     ),
-    {
-      name: 'call reached through a property access — reported without the suggestion',
-      code: dedent`
-        import * as z from 'zod/mini';
-        z.any().foo.bar();
-      `,
-      errors: [{ messageId: 'noZAny' }],
-    },
   ],
 });

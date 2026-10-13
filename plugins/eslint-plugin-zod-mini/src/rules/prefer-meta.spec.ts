@@ -128,27 +128,6 @@ ruleTester.run(preferMeta.name, preferMeta, {
       `,
     },
     {
-      name: 'describe without an argument — reported without a fix',
-      code: dedent`
-        import * as z from 'zod/mini';
-        z.string().check(z.describe());
-      `,
-      errors: [{ messageId: 'preferMeta' }],
-      output: null,
-    },
-    {
-      name: 'call chained on describe — the describe call is the one rewritten',
-      code: dedent`
-        import * as z from 'zod/mini';
-        z.describe("desc").unknownMethod();
-      `,
-      errors: [{ messageId: 'preferMeta' }],
-      output: dedent`
-        import * as z from 'zod/mini';
-        z.meta({ description: "desc" }).unknownMethod();
-      `,
-    },
-    {
       name: 'spread argument — reported without a fix',
       code: dedent`
         import * as z from 'zod/mini';

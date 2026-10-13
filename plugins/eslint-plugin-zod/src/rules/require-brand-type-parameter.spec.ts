@@ -72,9 +72,9 @@ ruleTester.run(requireBrandTypeParameter.name, requireBrandTypeParameter, {
       `,
     },
     {
-      name: 'a factory named brand is not the method',
+      name: 'a factory imported as brand is not the method',
       code: dedent`
-        import { brand } from 'zod'
+        import { string as brand } from 'zod'
         brand();
       `,
     },

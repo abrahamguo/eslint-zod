@@ -15,7 +15,7 @@ ruleTester.run(noDuplicateSchemaMethods.name, noDuplicateSchemaMethods, {
         z.object({}).safeExtend(A.shape).safeExtend(B.shape);
         z.object({}).merge(A).merge(B);
         z.object({ a: z.string(), b: z.string() }).omit({ a: true }).omit({ b: true });
-        z.object({ a: z.string(), b: z.string() }).pick({ a: true }).pick({ b: true });
+        z.object({ a: z.string(), b: z.string() }).pick({ a: true, b: true }).pick({ a: true });
         z.number().multipleOf(4).multipleOf(6);
         z.string().meta({ a: 1 }).meta({ b: 2 });
         z.string().with((ctx) => {}).with((ctx) => {});

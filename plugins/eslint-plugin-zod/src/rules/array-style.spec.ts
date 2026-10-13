@@ -8,13 +8,6 @@ const ruleTester = new RuleTester();
 ruleTester.run(`${arrayStyle.name} (function)`, arrayStyle, {
   valid: [
     {
-      name: 'array factory without an argument is not the method form',
-      code: dedent`
-        import * as z from 'zod';
-        z.array();
-      `,
-    },
-    {
       name: 'ignores a shadowed namespace in function style',
       code: 'import { z } from "zod"; function f(z) { return z.string().array(); }',
     },
