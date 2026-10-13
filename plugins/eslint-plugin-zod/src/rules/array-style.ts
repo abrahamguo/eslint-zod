@@ -58,7 +58,7 @@ export const arrayStyle = createZodPluginRule<[Options], MessageIds>({
         }
 
         // detection matches by name, so a shadowed `z` still reaches here
-        if (!resolveZodImport(root)) {
+        if (root.type !== AST_NODE_TYPES.Identifier || !resolveZodImport(root)) {
           return;
         }
         const { schemaDecl, schemaType } = zodSchemaMeta;
@@ -133,7 +133,7 @@ export const arrayStyle = createZodPluginRule<[Options], MessageIds>({
                 return null;
               }
               const objText = sourceCode.getText(callee.object);
-              return fixer.replaceText(arrayNode, `z.array(${objText})`);
+              return fixer.replaceText(arrayNode, `${root.name}.array(${objText})`);
             },
           });
         }

@@ -55,6 +55,18 @@ ruleTester.run(`${arrayStyle.name} (function)`, arrayStyle, {
       `,
     },
     {
+      name: 'aliased namespace import — the fix keeps the alias',
+      code: dedent`
+        import * as zod from 'zod';
+        zod.string().array();
+      `,
+      errors: [{ messageId: 'useFunction' }],
+      output: dedent`
+        import * as zod from 'zod';
+        zod.array(zod.string());
+      `,
+    },
+    {
       name: 'named import',
       code: dedent`
         import { string } from 'zod';
