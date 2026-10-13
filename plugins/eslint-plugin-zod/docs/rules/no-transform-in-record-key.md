@@ -10,7 +10,7 @@
 
 This ESLint rule detects **transforms in `z.record()` key schemas** and prevents them.
 
-Using transforms (like `.trim()`, `.normalize()`, `.toLowerCase()`, `.toUpperCase()`, `.overwrite()`, or `.transform()`) on the key schema in `z.record()` causes silent key mutation and data loss through key collisions.
+Using transforms (like `.trim()`, `.normalize()`, `.toLowerCase()`, `.toUpperCase()`, `.overwrite()`, `.slugify()`, or `.transform()`) on the key schema in `z.record()` causes silent key mutation and data loss through key collisions.
 
 ### The Problem
 

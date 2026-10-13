@@ -86,7 +86,8 @@ export function collectZodSchemaConstraints(opts: {
       continue;
     }
 
-    if (method.name !== 'check') {
+    // `.with(...)` is zod's alias of `.check(...)`.
+    if (method.name !== 'check' && method.name !== 'with') {
       constraints.push({
         name: method.name,
         node: method.node,

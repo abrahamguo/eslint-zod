@@ -195,6 +195,12 @@ const CHAINED_CANONICAL = new Map<ZodSchemaBaseType, Map<string, string>>([
   ['map', new Map([...CHAINED_COMMON, ['min', 'minSize'], ['max', 'maxSize'], ['size', 'size']])],
 ]);
 
+/** `zod/mini` exports these as second names for `gte` and `lte`. */
+const CHECK_ARGUMENT_ALIASES = new Map([
+  ['minimum', 'gte'],
+  ['maximum', 'lte'],
+]);
+
 /**
  * Looks up what a check means by its canonical name (see
  * {@link canonicalizeZodConstraintName}). Returns `null` for names the
@@ -211,8 +217,8 @@ export function getZodCheckDescriptor(canonicalName: string): ZodCheckDescriptor
  *
  * Chained names are type-dependent, hence the `baseType` argument: `.min()` is
  * `minLength` on a string, `gte` on a number and `minSize` on a set.
- * `.check(...)` arguments are already canonical, except the `iso.*` formats,
- * whose factory resolves to the `iso` namespace and is read from the callee.
+ * `.check(...)` arguments are already canonical, except the `minimum` / `maximum` aliases
+ * and the `iso.*` formats, whose factory resolves to the `iso` namespace and is read from the callee.
  *
  * Returns `null` when the spelling has no canonical form for that base type —
  * an unknown method, or one that does not constrain the value.
@@ -230,7 +236,7 @@ export function canonicalizeZodConstraintName(
 ): string | null {
   if (constraint.origin === 'check-argument') {
     if (constraint.name !== 'iso') {
-      return constraint.name;
+      return CHECK_ARGUMENT_ALIASES.get(constraint.name) ?? constraint.name;
     }
 
     // `z.iso.date()` detects as `iso`; read the member name to tell the ISO

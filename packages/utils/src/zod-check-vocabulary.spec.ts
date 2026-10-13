@@ -67,6 +67,8 @@ describe('canonicalizeZodConstraintName', () => {
 
   it('passes `.check(...)` arguments through, resolving `iso` members', () => {
     expect(canonicalizeZodConstraintName(checkArgument('minLength'), 'string')).toBe('minLength');
+    expect(canonicalizeZodConstraintName(checkArgument('minimum'), 'number')).toBe('gte');
+    expect(canonicalizeZodConstraintName(checkArgument('maximum'), 'number')).toBe('lte');
     expect(canonicalizeZodConstraintName(checkArgument('iso', 'datetime'), 'string')).toBe(
       'iso.datetime',
     );

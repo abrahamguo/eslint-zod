@@ -333,5 +333,13 @@ ruleTester.run(noTransformInRecordKey.name, noTransformInRecordKey, {
       `,
       errors: [{ messageId: 'noTransformInRecordKey' }],
     },
+    {
+      name: 'slugify on the key schema',
+      code: dedent`
+        import * as z from 'zod';
+        const config = z.record(z.string().slugify(), z.number());
+      `,
+      errors: [{ messageId: 'noTransformInRecordKey' }],
+    },
   ],
 });

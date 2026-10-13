@@ -719,5 +719,21 @@ ruleTester.run(noConflictingChecks.name, noConflictingChecks, {
       `,
       errors: [{ messageId: 'pointlessCheck' }],
     },
+    {
+      name: 'empty number range through the minimum / maximum aliases',
+      code: dedent`
+        import * as z from 'zod/mini';
+        z.number().check(z.minimum(10), z.maximum(5));
+      `,
+      errors: [{ messageId: 'impossibleCase' }],
+    },
+    {
+      name: 'length min greater than max passed to with()',
+      code: dedent`
+        import * as z from 'zod/mini';
+        z.string().with(z.minLength(5), z.maxLength(2));
+      `,
+      errors: [{ messageId: 'impossibleCase' }],
+    },
   ],
 });

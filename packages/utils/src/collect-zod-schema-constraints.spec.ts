@@ -119,6 +119,21 @@ describe('collectZodSchemaConstraints', () => {
     ]);
   });
 
+  it('expands `.with(...)` arguments like `.check(...)`', () => {
+    // z.string().with(z.minLength(2))
+    const minLength = makeCall('minLength');
+    const methods = [makeChainItem('string'), makeChainItem('with', [minLength])];
+
+    const constraints = collectZodSchemaConstraints({
+      methods,
+      detectZodSchemaRootNode: makeDetector(),
+    });
+
+    expect(constraints.map((c) => [c.name, c.origin])).toStrictEqual([
+      ['minLength', 'check-argument'],
+    ]);
+  });
+
   it('handles multiple `.check(...)` calls and chained constraints in one chain', () => {
     // Abstract chain exercising both origins at once. NOTE: real code never
     // mixes API styles (chained = zod, `.check(...)` = zod/mini); the
