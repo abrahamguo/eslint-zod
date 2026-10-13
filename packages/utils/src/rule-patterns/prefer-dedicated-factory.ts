@@ -1,4 +1,4 @@
-import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
+import type { TSESLint } from '@typescript-eslint/utils';
 
 import type { ZodImportScope } from '../zod-import-scope.js';
 
@@ -49,7 +49,10 @@ export function buildPreferDedicatedFactoryCreate<TMessageIds extends string>(
           node: modifierMethod?.node ?? node,
           messageId,
           fix(fixer) {
-            if (!modifierMethod || zodSchemaMeta.schemaDecl === 'named') {
+            // A named declaration has no `<ns>.<factory>` member to rewrite.
+            const factoryCallee = methods.at(0)?.member;
+            const modifierCallee = modifierMethod?.member;
+            if (!factoryCallee || !modifierCallee || zodSchemaMeta.schemaDecl === 'named') {
               return null;
             }
 
@@ -58,15 +61,6 @@ export function buildPreferDedicatedFactoryCreate<TMessageIds extends string>(
             }
 
             const { sourceCode } = context;
-
-            // The chain is walkable (`modifierMethod` came from it) and starts at the factory,
-            // which the visitor already filtered to `factoryName`.
-            // Named declarations returned above,
-            // so both calls are `<ns>.<name>(…)` member expressions —
-            // a bare identifier callee is unreachable here.
-            const [factoryMethod] = methods;
-            const factoryCallee = factoryMethod.node.callee as TSESTree.MemberExpression;
-            const modifierCallee = modifierMethod.node.callee as TSESTree.MemberExpression;
 
             const fixes = [
               fixer.replaceText(

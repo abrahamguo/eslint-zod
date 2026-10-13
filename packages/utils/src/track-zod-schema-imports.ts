@@ -37,10 +37,25 @@ export interface ZodTrackerOptions {
   sourceCode?: TSESLint.SourceCode;
 }
 
+/** The callee of a chain call written as a member: `z.string` or `<schema>.min`. */
+export type ZodChainMember = TSESTree.MemberExpressionNonComputedName & {
+  property: TSESTree.Identifier;
+};
+
 /** One call in a zod chain: the method's name and the call expression carrying it. */
 export interface ZodChainItem {
   name: string;
   node: TSESTree.CallExpression;
+  /** The call's callee; `null` only for a bare named-import factory (`string()`), so never past index 0. */
+  member: ZodChainMember | null;
+}
+
+function isZodChainMember(callee: TSESTree.Expression): callee is ZodChainMember {
+  return (
+    callee.type === AST_NODE_TYPES.MemberExpression &&
+    !callee.computed &&
+    callee.property.type === AST_NODE_TYPES.Identifier
+  );
 }
 
 /** Options for {@link ZodSchemaImportTracker.createSchemaVisitor}. */
@@ -134,6 +149,9 @@ export interface ZodSchemaImportTracker {
    * or the array is empty.
    * It is never a partial chain missing its leading calls.
    *
+   * The walk stops at a property access:
+   * `z.object({…}).shape.a.optional()` gives `[optional]`, so `chain[0]` is not the factory there.
+   *
    * Returns an empty array if the expression isn't a navigable zod chain,
    * which includes zod schemas built through a computed member (`z['string']().min(1)`):
    * those are still *detected*,
@@ -210,14 +228,11 @@ export function trackZodSchemaImports(
       const { callee } = current as { callee: TSESTree.Expression };
 
       // Match: z.number(), z.int(), z.min(), etc.
-      if (
-        callee.type === AST_NODE_TYPES.MemberExpression &&
-        !callee.computed &&
-        callee.property.type === AST_NODE_TYPES.Identifier
-      ) {
+      if (isZodChainMember(callee)) {
         methods.unshift({
           name: callee.property.name,
           node: current,
+          member: callee,
         });
 
         current = callee.object;
@@ -229,6 +244,7 @@ export function trackZodSchemaImports(
         methods.unshift({
           name: callee.name,
           node: current,
+          member: null,
         });
 
         break;

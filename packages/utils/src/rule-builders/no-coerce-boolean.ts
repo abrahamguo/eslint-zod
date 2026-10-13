@@ -30,12 +30,11 @@ export function buildNoCoerceBooleanCreate(
         // since the named `coerce.boolean()` form would require introducing a `stringbool` import.
         // Empty for a computed factory (`z.coerce['boolean']()`), which detection still resolves —
         // report it, just without the suggestion.
-        const factoryCallee = collectZodChainMethods(node).at(0)?.node.callee;
+        const factoryCallee = collectZodChainMethods(node).at(0)?.member;
 
         if (
           zodSchemaMeta.schemaDecl !== 'namespace' ||
-          factoryCallee?.type !== AST_NODE_TYPES.MemberExpression ||
-          factoryCallee.object.type !== AST_NODE_TYPES.MemberExpression
+          factoryCallee?.object.type !== AST_NODE_TYPES.MemberExpression
         ) {
           context.report({
             node,

@@ -1,6 +1,5 @@
 import { zodImportScope } from '@eslint-zod/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { TSESTree } from '@typescript-eslint/utils';
 
 import { createZodPluginRule } from '../utils/create-plugin-rule.js';
 import { hasZodRuntimeImportRoot } from '../utils/has-zod-runtime-import-root.js';
@@ -122,13 +121,12 @@ export const arrayStyle = createZodPluginRule<[Options], MessageIds>({
         );
 
         if (arrayMethod) {
-          const arrayNode = arrayMethod.node;
-          if (schemaDecl === 'namespace') {
+          const { node: arrayNode, member: callee } = arrayMethod;
+          if (schemaDecl === 'namespace' && callee) {
             context.report({
               node,
               messageId: 'useFunction',
               fix(fixer) {
-                const callee = arrayNode.callee as TSESTree.MemberExpression;
                 const objText = sourceCode.getText(callee.object);
                 return fixer.replaceText(arrayNode, `z.array(${objText})`);
               },

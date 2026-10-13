@@ -3,6 +3,7 @@ import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import { buildZodWrapperUnwrapFix } from '../build-zod-wrapper-unwrap-fix.js';
 import type { ZodSchemaMeta } from '../detect-zod-schema-root-node.js';
+import type { ZodChainItem } from '../track-zod-schema-imports.js';
 import type { ZodImportScope } from '../zod-import-scope.js';
 
 type MessageIds = 'preferNullish';
@@ -39,16 +40,14 @@ export function buildPreferNullishCreate(
      */
     function renameWrapperFactory(
       fixer: TSESLint.RuleFixer,
-      wrapperCall: TSESTree.CallExpression,
+      wrapper: ZodChainItem,
       schemaDecl: 'namespace' | 'named',
     ): TSESLint.RuleFix | null {
-      const { callee } = wrapperCall;
+      const { callee } = wrapper.node;
 
-      if (schemaDecl === 'namespace') {
-        // A namespace schema is detected only when its factory is a member of the namespace,
-        // so this call is always `<ns>.<factory>(…)`.
-        const { property } = callee as TSESTree.MemberExpression;
-        return fixer.replaceText(property, 'nullish');
+      // A namespace schema is detected only when its factory is a member of the namespace.
+      if (schemaDecl === 'namespace' && wrapper.member) {
+        return fixer.replaceText(wrapper.member.property, 'nullish');
       }
 
       // A named-import schema is normally called bare (`optional(…)`),
@@ -68,11 +67,12 @@ export function buildPreferNullishCreate(
 
     /** Wrapper form (`zod/mini`): `z.optional(z.nullable(inner))`. */
     function handleWrapper(node: TSESTree.CallExpression, meta: ZodSchemaMeta): void {
-      const wrapperCall = collectZodChainMethods(node).at(0)?.node;
+      const wrapper = collectZodChainMethods(node).at(0);
       // The leftmost chain item is the factory call itself; guard extra args.
-      if (wrapperCall?.arguments.length !== 1) {
+      if (wrapper?.node.arguments.length !== 1) {
         return;
       }
+      const wrapperCall = wrapper.node;
 
       const [inner] = wrapperCall.arguments;
       if (inner.type !== AST_NODE_TYPES.CallExpression) {
@@ -96,7 +96,7 @@ export function buildPreferNullishCreate(
         node: wrapperCall,
         messageId: 'preferNullish',
         fix(fixer) {
-          const renameFix = renameWrapperFactory(fixer, wrapperCall, meta.schemaDecl);
+          const renameFix = renameWrapperFactory(fixer, wrapper, meta.schemaDecl);
           if (!renameFix) {
             return null;
           }

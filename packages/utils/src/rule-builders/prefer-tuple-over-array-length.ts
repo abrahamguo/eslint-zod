@@ -144,21 +144,17 @@ export function buildPreferTupleOverArrayLengthCreate(
               return null;
             }
 
-            const arrayNode = methods.find((it) => it.name === 'array')?.node;
+            const array = methods.find((it) => it.name === 'array');
 
             // Need exactly one argument (the element schema) to build the tuple.
-            if (arrayNode?.arguments.length !== 1) {
+            if (!array?.member || array.node.arguments.length !== 1) {
               return null;
             }
 
-            const [element] = arrayNode.arguments;
+            const [element] = array.node.arguments;
             if (element.type === AST_NODE_TYPES.SpreadElement) {
               return null;
             }
-
-            // Named declarations returned above and a computed factory produces no walkable `array` chain item,
-            // so the callee is `<ns>.array`.
-            const arrayCallee = arrayNode.callee as TSESTree.MemberExpression;
 
             const removeFixes = buildZodConstraintsRemoveFix({
               fixer,
@@ -176,7 +172,7 @@ export function buildPreferTupleOverArrayLengthCreate(
             const tupleArguments = kind === 'min' ? `[${items}], ${elementText}` : `[${items}]`;
 
             return [
-              fixer.replaceText(arrayCallee.property, 'tuple'),
+              fixer.replaceText(array.member.property, 'tuple'),
               fixer.replaceText(element, tupleArguments),
               ...removeFixes,
             ];

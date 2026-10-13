@@ -1,5 +1,4 @@
 import type { TSESLint } from '@typescript-eslint/utils';
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import type { ZodImportScope } from '../zod-import-scope.js';
 
@@ -22,7 +21,7 @@ export function buildNoNativeEnumCreate(
       onSchema(node): void {
         // Empty for a computed factory (`z['nativeEnum'](Foo)`), which detection still resolves —
         // report it, just without a fix.
-        const rootMethodNode = collectZodChainMethods(node).at(0)?.node;
+        const factoryCallee = collectZodChainMethods(node).at(0)?.member;
 
         context.report({
           node,
@@ -31,11 +30,11 @@ export function buildNoNativeEnumCreate(
             // For named imports (e.g., `nativeEnum(Color)`),
             // we cannot safely auto-fix because replacing the entire chain would require access to the namespace prefix.
             // Report the error without a fix in this case.
-            if (rootMethodNode?.callee.type !== AST_NODE_TYPES.MemberExpression) {
+            if (!factoryCallee) {
               return null;
             }
 
-            return fixer.replaceText(rootMethodNode.callee.property, 'enum');
+            return fixer.replaceText(factoryCallee.property, 'enum');
           },
         });
       },

@@ -1,6 +1,7 @@
 // import tracking & scopes
 export type {
   ZodChainItem,
+  ZodChainMember,
   ZodImportBinding,
   ZodImportKind,
   ZodSchemaImportTracker,

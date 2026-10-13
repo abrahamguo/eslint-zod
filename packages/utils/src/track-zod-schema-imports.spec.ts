@@ -180,6 +180,7 @@ describe('collectZodChainMethods', () => {
     expect(methods.map((m) => m.name)).toStrictEqual(['number', 'min']);
     expect(methods[0]?.node).toBe(numberCall);
     expect(methods[1]?.node).toBe(minCall);
+    expect(methods.map((m) => m.member)).toStrictEqual([numberCall.callee, minCall.callee]);
   });
 
   it('collects single named import: string()', () => {
@@ -200,6 +201,8 @@ describe('collectZodChainMethods', () => {
     const methods = tracker.collectZodChainMethods(optCall);
 
     expect(methods.map((m) => m.name)).toStrictEqual(['string', 'optional']);
+    // only a bare named-import factory has no member
+    expect(methods.map((m) => m.member)).toStrictEqual([null, optCall.callee]);
   });
 
   describe('unwalkable chains return nothing rather than a partial chain', () => {

@@ -1,5 +1,4 @@
 import { getZodChainedMethodNames, zodImportScope } from '@eslint-zod/utils';
-import type { TSESTree } from '@typescript-eslint/utils';
 
 import { createZodPluginRule } from '../utils/create-plugin-rule.js';
 
@@ -33,29 +32,19 @@ export const noNumberSchemaWithStep = createZodPluginRule({
           return;
         }
 
-        const methods = collectZodChainMethods(node);
         // Skip index 0 — that item is the `number()` factory itself.
-        const stepIndex = methods.findIndex((m, index) => index > 0 && m.name === 'step');
-
-        // Rename the `step` call's own property, not the chain's outermost one:
-        // in `z.number().step(5).min(0)` the outermost callee is `.min`.
-        // Past index 0 the callee is always a plain-identifier member expression —
-        // that is the only shape `collectZodChainMethods` names.
-        const property =
-          stepIndex === -1
-            ? null
-            : (
-                methods[stepIndex].node.callee as TSESTree.MemberExpression & {
-                  property: TSESTree.Identifier;
-                }
-              ).property;
+        const step = collectZodChainMethods(node).find(
+          (m, index) => index > 0 && m.name === 'step',
+        );
 
         context.report({
           node,
           messageId: 'useMultipleOf',
           fix(fixer) {
             // A computed factory leaves no nameable `.step()` node to rename.
-            return property === null ? null : fixer.replaceText(property, 'multipleOf');
+            // Rename the `step` call's own property, not the chain's outermost one:
+            // in `z.number().step(5).min(0)` the outermost callee is `.min`.
+            return step?.member ? fixer.replaceText(step.member.property, 'multipleOf') : null;
           },
         });
       },

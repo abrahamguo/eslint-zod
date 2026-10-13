@@ -40,7 +40,7 @@ AST parsing, import tracking, traversal, and fixer helpers.
 - `zodImportScope`, `zodMiniImportScope`, `zodCoreImportScope` — pre-built `ZodImportScope` instances
 - `scope.createTracker({ kind, sourceCode? })` — the returned tracker exposes `createSchemaVisitor`, `detectZodSchemaRootNode`, `isZodSchemaOfType`, `collectZodChainMethods`, `collectZodSchemaConstraints`, and the import-lookup helpers. `getZodImportBindings()` returns every binding with the declaration it came from, and `resolveZodImport(node)` / `resolveZodExport(node)` resolve a node to its zod import honouring lexical scope, so a shadowed `z` resolves to `null` — use them over `isZodNamespace` in a rule whose fixer writes an import. `createTracker({ kind })` picks which specifiers are recorded, and is required — `'value'` skips `import type { … }` and `{ type … }`, `'type'` keeps only those, `'all'` keeps both and is what a rule reading a type position needs, since either form reaches one. Schema detection is reachable **only** through a tracker — the raw forms need the tracker's private import maps
 - `tracker.createSchemaVisitor({ schemaType?, onSchema })` — builds the `{ ImportDeclaration, CallExpression }` visitor a rule returns, with detection and the `schemaType` filter already applied. **The standard shape for a schema rule**; spread it to add more visitor keys
-- types `ZodSchemaImportTracker`, `ZodChainItem`, `ZodImportBinding`, `ZodImportKind`, `ZodSchemaVisitorOptions`, `ZodTrackerOptions`
+- types `ZodSchemaImportTracker`, `ZodChainItem`, `ZodChainMember`, `ZodImportBinding`, `ZodImportKind`, `ZodSchemaVisitorOptions`, `ZodTrackerOptions`
 
 **Schema detection & navigation**
 

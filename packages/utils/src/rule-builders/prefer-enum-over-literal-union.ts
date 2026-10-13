@@ -1,4 +1,4 @@
-import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
+import type { TSESLint } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import type { ZodImportScope } from '../zod-import-scope.js';
@@ -63,12 +63,12 @@ export function buildPreferEnumOverLiteralUnionCreate(
           node,
           messageId: 'useEnum',
           fix(fixer) {
-            if (zodSchemaMeta.schemaDecl === 'named') {
+            if (zodSchemaMeta.schemaDecl === 'named' || !union.member) {
               return null;
             }
 
             return [
-              fixer.replaceText((unionNode.callee as TSESTree.MemberExpression).property, 'enum'),
+              fixer.replaceText(union.member.property, 'enum'),
               fixer.replaceText(unionNode.arguments[0], `[${zodLiteralStrings.join(', ')}]`),
             ];
           },

@@ -1,5 +1,4 @@
 import { zodImportScope } from '@eslint-zod/utils';
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import { createZodPluginRule } from '../utils/create-plugin-rule.js';
 
@@ -31,7 +30,7 @@ export const preferMeta = createZodPluginRule({
           return;
         }
 
-        const { callee } = describe.node;
+        const { member } = describe;
         const describeArg = describe.node.arguments.at(0);
 
         context.report({
@@ -40,11 +39,11 @@ export const preferMeta = createZodPluginRule({
           fix(fixer) {
             // A named import (`describe('…')`) has no property to rename,
             // and a call without an argument has nothing to wrap.
-            if (callee.type !== AST_NODE_TYPES.MemberExpression || !describeArg) {
+            if (!member || !describeArg) {
               return null;
             }
             return [
-              fixer.replaceText(callee.property, 'meta'),
+              fixer.replaceText(member.property, 'meta'),
               fixer.replaceText(
                 describeArg,
                 `{ description: ${context.sourceCode.getText(describeArg)} }`,
