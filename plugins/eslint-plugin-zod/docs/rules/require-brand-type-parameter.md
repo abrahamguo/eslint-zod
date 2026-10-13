@@ -13,6 +13,8 @@
 This rule enforces the use of type parameters when calling the `.brand()` method in Zod schemas.\
 Brand is a TypeScript-only feature that adds nominal typing to your schemas, requiring a type parameter to be meaningful.
 
+A value argument also names the brand (`.brand('id')`): the type parameter is inferred from it, so that form is accepted.
+
 ## Why?
 
 The `.brand()` method in Zod is used for nominal typing, which is a TypeScript-only feature.\

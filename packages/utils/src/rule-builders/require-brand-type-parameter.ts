@@ -26,7 +26,8 @@ export function buildRequireBrandTypeParameterCreate(
 
         const { typeArguments } = brandNode;
 
-        if (typeArguments && typeArguments.params.length > 0) {
+        // `.brand('id')` infers the brand from its argument.
+        if ((typeArguments && typeArguments.params.length > 0) || brandNode.arguments.length > 0) {
           return;
         }
 

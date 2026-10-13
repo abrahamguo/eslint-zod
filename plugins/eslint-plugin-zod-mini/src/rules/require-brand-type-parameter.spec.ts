@@ -14,6 +14,13 @@ const ruleTester = new RuleTester();
 ruleTester.run(requireBrandTypeParameter.name, requireBrandTypeParameter, {
   valid: [
     {
+      name: 'brand inferred from a value argument',
+      code: dedent`
+        import * as z from 'zod/mini'
+        z.string().brand('id');
+      `,
+    },
+    {
       name: 'namespace with type parameter',
       code: dedent`
         import * as z from 'zod/mini'
