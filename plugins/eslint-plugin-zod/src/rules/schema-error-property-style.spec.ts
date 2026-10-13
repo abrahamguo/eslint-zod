@@ -8,6 +8,13 @@ const ruleTester = new RuleTester();
 ruleTester.run(schemaErrorPropertyStyle.name, schemaErrorPropertyStyle, {
   valid: [
     {
+      name: 'params of another method chained after refine are not the refine error',
+      code: dedent`
+        import * as z from 'zod';
+        z.string().refine(() => true, "ok").max(5, { error: () => "my error" });
+      `,
+    },
+    {
       name: 'default option (namespace import)',
       code: dedent`
         import * as z from 'zod';
@@ -148,6 +155,60 @@ ruleTester.run(`${schemaErrorPropertyStyle.name} (refine)`, schemaErrorPropertyS
         {
           messageId: 'invalidSelector',
           data: { selector: '>!asd' },
+        },
+      ],
+      output: null,
+    },
+    {
+      name: 'refine followed by another method',
+      code: dedent`
+        import * as z from 'zod';
+        z.string().refine(() => true, { error: () => "my error" }).optional();
+      `,
+      errors: [
+        {
+          messageId: 'invalidStyle',
+          data: {
+            selector: 'Literal,TemplateLiteral',
+            example: "'error message'",
+            actual: '() => "my error"',
+          },
+        },
+      ],
+      output: null,
+    },
+    {
+      name: 'custom followed by another method',
+      code: dedent`
+        import * as z from 'zod';
+        z.custom(() => true, { error: () => "my error" }).optional();
+      `,
+      errors: [
+        {
+          messageId: 'invalidStyle',
+          data: {
+            selector: 'Literal,TemplateLiteral',
+            example: "'error message'",
+            actual: '() => "my error"',
+          },
+        },
+      ],
+      output: null,
+    },
+    {
+      name: 'quoted error key',
+      code: dedent`
+        import * as z from 'zod';
+        z.custom(() => true, { 'error': () => "my error" });
+      `,
+      errors: [
+        {
+          messageId: 'invalidStyle',
+          data: {
+            selector: 'Literal,TemplateLiteral',
+            example: "'error message'",
+            actual: '() => "my error"',
+          },
         },
       ],
       output: null,

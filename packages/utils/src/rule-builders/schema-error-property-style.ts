@@ -2,6 +2,7 @@ import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import esquery from 'esquery';
 
+import { getStaticPropertyName } from '../get-static-property-name.js';
 import type { ZodImportScope } from '../zod-import-scope.js';
 
 export interface SchemaErrorPropertyStyleOptions {
@@ -39,67 +40,53 @@ export function buildSchemaErrorPropertyStyleCreate(
 
     return createSchemaVisitor({
       onSchema(node, zodSchemaMeta): void {
-        if (
-          zodSchemaMeta.schemaType !== 'custom' &&
-          !collectZodChainMethods(node).some((it) => it.name === 'refine')
-        ) {
-          return;
+        // `node` is the outermost call: the params belong to the `refine` / `custom` call itself.
+        const chain = collectZodChainMethods(node);
+        const calls = chain.filter((it) => it.name === 'refine').map((it) => it.node);
+        if (zodSchemaMeta.schemaType === 'custom') {
+          calls.push(chain.at(0)?.node ?? node);
         }
 
-        // Error should be the second parameter, if not present stop processing
-        if (node.arguments.length < 2) {
-          return;
+        for (const call of calls) {
+          // Error should be the second parameter, if not present stop processing
+          const params = call.arguments.at(1);
+
+          let errorMessageNode: TSESTree.Node | undefined;
+
+          switch (params?.type) {
+            case AST_NODE_TYPES.Literal:
+            case AST_NODE_TYPES.TemplateLiteral:
+              errorMessageNode = params;
+              break;
+
+            case AST_NODE_TYPES.ObjectExpression:
+              errorMessageNode = params.properties.find(
+                (property): property is TSESTree.Property =>
+                  property.type === AST_NODE_TYPES.Property &&
+                  getStaticPropertyName(property) === 'error',
+              )?.value;
+              break;
+
+            // no default
+          }
+
+          if (
+            !errorMessageNode ||
+            esquery.matches(errorMessageNode as never, parsedSelector, errorMessageNode as never)
+          ) {
+            continue;
+          }
+
+          context.report({
+            node: call,
+            messageId: 'invalidStyle',
+            data: {
+              selector,
+              example,
+              actual: context.sourceCode.getText(errorMessageNode),
+            },
+          });
         }
-
-        let errorMessageNode: TSESTree.Node | undefined;
-
-        const [, params] = node.arguments;
-
-        switch (params.type) {
-          case AST_NODE_TYPES.Literal:
-          case AST_NODE_TYPES.TemplateLiteral:
-            errorMessageNode = params;
-            break;
-
-          case AST_NODE_TYPES.ObjectExpression:
-            for (const property of params.properties) {
-              if (
-                property.type === AST_NODE_TYPES.Property &&
-                property.key.type === AST_NODE_TYPES.Identifier &&
-                property.key.name === 'error'
-              ) {
-                errorMessageNode = property.value;
-                break;
-              }
-            }
-            break;
-
-          // no default
-        }
-
-        if (!errorMessageNode) {
-          return;
-        }
-
-        const match = esquery.matches(
-          errorMessageNode as never,
-          parsedSelector,
-          errorMessageNode as never,
-        );
-
-        if (match) {
-          return;
-        }
-
-        context.report({
-          node,
-          messageId: 'invalidStyle',
-          data: {
-            selector,
-            example,
-            actual: context.sourceCode.getText(errorMessageNode),
-          },
-        });
       },
     });
   };

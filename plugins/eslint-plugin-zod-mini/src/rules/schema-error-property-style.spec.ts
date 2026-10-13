@@ -134,5 +134,23 @@ ruleTester.run(`${schemaErrorPropertyStyle.name} (refine)`, schemaErrorPropertyS
       ],
       output: null,
     },
+    {
+      name: 'quoted error key',
+      code: dedent`
+        import * as z from 'zod/mini';
+        z.custom(() => true, { 'error': () => "my error" });
+      `,
+      errors: [
+        {
+          messageId: 'invalidStyle',
+          data: {
+            selector: 'Literal,TemplateLiteral',
+            example: "'error message'",
+            actual: '() => "my error"',
+          },
+        },
+      ],
+      output: null,
+    },
   ],
 });
