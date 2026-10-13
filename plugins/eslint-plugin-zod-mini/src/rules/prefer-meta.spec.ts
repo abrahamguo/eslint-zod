@@ -148,5 +148,14 @@ ruleTester.run(preferMeta.name, preferMeta, {
         z.meta({ description: "desc" }).unknownMethod();
       `,
     },
+    {
+      name: 'spread argument — reported without a fix',
+      code: dedent`
+        import * as z from 'zod/mini';
+        z.string().check(z.describe(...args));
+      `,
+      errors: [{ messageId: 'preferMeta' }],
+      output: null,
+    },
   ],
 });

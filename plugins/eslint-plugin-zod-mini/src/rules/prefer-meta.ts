@@ -1,4 +1,5 @@
 import { zodMiniImportScope } from '@eslint-zod/utils';
+import { AST_NODE_TYPES } from '@typescript-eslint/types';
 
 import { createZodMiniPluginRule } from '../utils/create-plugin-rule.js';
 
@@ -37,8 +38,8 @@ export const preferMeta = createZodMiniPluginRule({
             const describeArg = describe?.node.arguments.at(0);
 
             // A named import (`describe('…')`) has no property to rename,
-            // and a call without an argument has nothing to wrap.
-            if (!member || !describeArg) {
+            // and a missing or spread argument has no single value to wrap.
+            if (!member || !describeArg || describeArg.type === AST_NODE_TYPES.SpreadElement) {
               return null;
             }
 

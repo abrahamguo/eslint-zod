@@ -149,5 +149,14 @@ ruleTester.run(preferMeta.name, preferMeta, {
       errors: [{ messageId: 'preferMeta' }],
       output: null,
     },
+    {
+      name: 'spread argument — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        z.string().describe(...args);
+      `,
+      errors: [{ messageId: 'preferMeta' }],
+      output: null,
+    },
   ],
 });
