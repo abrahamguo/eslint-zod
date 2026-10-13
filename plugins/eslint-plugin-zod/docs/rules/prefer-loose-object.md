@@ -55,6 +55,7 @@ hoisting `.loose()` into the factory would let that method override it.
 ## Conflict with `zod/consistent-object-schema-type`
 
 If you are using the `zod/consistent-object-schema-type` rule alongside this one, be aware that there can be a conflict if `consistent-object-schema-type` is configured to only allow `object` (which is its default behavior).
+That is why `consistent-object-schema-type` is only part of the `all` config, not of `stylistic`.
 
 To resolve this conflict, configure `consistent-object-schema-type` to also allow `looseObject`:
 

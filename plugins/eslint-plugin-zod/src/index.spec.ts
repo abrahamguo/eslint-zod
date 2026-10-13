@@ -86,8 +86,13 @@ describe('config composition', () => {
     expect(strict.filter((ruleName) => stylistic.includes(ruleName))).toEqual([]);
   });
 
-  it('`all` is exactly `strict` and `stylistic`', () => {
-    expect(all).toEqual([...strict, ...stylistic].sort());
+  it('`all` is a superset of `strict` and `stylistic`', () => {
+    expect(all).toEqual(expect.arrayContaining([...strict, ...stylistic]));
+  });
+
+  it('`stylistic` leaves out the rule that conflicts with the object factory rules', () => {
+    expect(stylistic).toContain('zod/prefer-strict-object');
+    expect(stylistic).not.toContain('zod/consistent-object-schema-type');
   });
 
   it('`all` contains every non-deprecated rule', () => {

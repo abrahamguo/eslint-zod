@@ -162,7 +162,6 @@ const strictRules = {
 const stylisticRules = {
   'zod/array-style': 'error',
   'zod/consistent-import-source': 'error',
-  'zod/consistent-object-schema-type': 'error',
   'zod/consistent-schema-output-type-style': 'error',
   'zod/prefer-enum-over-literal-union': 'error',
   'zod/prefer-loose-object': 'error',
@@ -184,7 +183,12 @@ export default {
     recommended: createConfig('recommended', recommendedRules),
     strict: createConfig('strict', strictRules),
     stylistic: createConfig('stylistic', stylisticRules),
-    all: createConfig('all', { ...strictRules, ...stylisticRules }),
+    all: createConfig('all', {
+      ...strictRules,
+      ...stylisticRules,
+      // overlaps `prefer-strict-object` / `prefer-loose-object`, so no curated config carries it
+      'zod/consistent-object-schema-type': 'error',
+    }),
   },
 } satisfies ESLint.Plugin;
 /**
