@@ -1,5 +1,6 @@
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 
+import { hasCommentInRange } from './has-comment-in-range.js';
 import { hasParenthesizedReceiver } from './has-parenthesized-receiver.js';
 
 /**
@@ -36,6 +37,12 @@ export function buildZodChainReplacementFix(opts: {
     return null;
   }
 
+  // The replacement is rebuilt from pieces, so a comment anywhere in the range could be lost.
+  const range: TSESTree.Range = [fromNode.range[0], toNode.range[1]];
+  if (hasCommentInRange(sourceCode, range)) {
+    return null;
+  }
+
   // prefix is the namespace (e.g. "z")
   const fromCallee = fromNode.callee as TSESTree.MemberExpression;
   const prefixObj = fromCallee.object;
@@ -67,5 +74,5 @@ export function buildZodChainReplacementFix(opts: {
 
   replacement += `)${betweenSuffixes.join('')}`;
 
-  return fixer.replaceTextRange([fromNode.range[0], toNode.range[1]], replacement);
+  return fixer.replaceTextRange(range, replacement);
 }

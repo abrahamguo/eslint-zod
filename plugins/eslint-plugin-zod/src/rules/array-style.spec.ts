@@ -382,5 +382,16 @@ ruleTester.run(`${arrayStyle.name} (import scope)`, arrayStyle, {
         output: `${statement} schema.array();`,
       }),
     ),
+    {
+      name: 'comment in the rewritten text — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        z.string()
+          // keep
+          .array();
+      `,
+      errors: [{ messageId: 'useFunction' }],
+      output: null,
+    },
   ],
 });

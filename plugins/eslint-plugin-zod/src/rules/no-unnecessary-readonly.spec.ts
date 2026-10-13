@@ -214,5 +214,16 @@ ruleTester.run(noUnnecessaryReadonly.name, noUnnecessaryReadonly, {
       errors: [{ messageId: 'unnecessaryReadonly' }],
       output: null,
     },
+    {
+      name: 'comment in the rewritten text — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        z.string()
+          // keep
+          .readonly();
+      `,
+      errors: [{ messageId: 'unnecessaryReadonly' }],
+      output: null,
+    },
   ],
 });

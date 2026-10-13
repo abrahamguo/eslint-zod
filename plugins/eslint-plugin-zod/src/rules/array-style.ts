@@ -1,4 +1,4 @@
-import { zodImportScope } from '@eslint-zod/utils';
+import { hasCommentInRange, zodImportScope } from '@eslint-zod/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { TSESTree } from '@typescript-eslint/utils';
 
@@ -130,6 +130,10 @@ export const arrayStyle = createZodPluginRule<[Options], MessageIds>({
             messageId: 'useFunction',
             fix(fixer) {
               if (schemaDecl !== 'namespace' || !callee) {
+                return null;
+              }
+              // only the receiver's text is kept
+              if (hasCommentInRange(sourceCode, [callee.object.range[1], arrayNode.range[1]])) {
                 return null;
               }
               const objText = sourceCode.getText(callee.object);

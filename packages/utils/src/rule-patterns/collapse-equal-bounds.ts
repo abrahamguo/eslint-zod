@@ -5,6 +5,7 @@ import { buildZodChainRemoveMethodFix } from '../build-zod-chain-remove-method-f
 import type { ZodSchemaConstraint } from '../collect-zod-schema-constraints.js';
 import type { ZodSchemaBaseType } from '../get-zod-schema-base-type.js';
 import { getZodSchemaBaseType } from '../get-zod-schema-base-type.js';
+import { hasCommentInRange } from '../has-comment-in-range.js';
 import { readIntegerLiteralValue } from '../read-integer-literal-value.js';
 import type { ZodCheckDomain } from '../zod-check-vocabulary.js';
 import { canonicalizeZodConstraintName, getZodCheckDescriptor } from '../zod-check-vocabulary.js';
@@ -95,11 +96,17 @@ function buildBoundRemoveFix(opts: {
   fixer: TSESLint.RuleFixer;
   methods: Array<{ name: string; node: TSESTree.CallExpression }>;
   constraint: ZodSchemaConstraint;
+  sourceCode: TSESLint.SourceCode;
 }): TSESLint.RuleFix | null {
-  const { fixer, methods, constraint } = opts;
+  const { fixer, methods, constraint, sourceCode } = opts;
 
   if (constraint.origin === 'chained' || constraint.argumentCount === 1) {
-    return buildZodChainRemoveMethodFix({ fixer, methods, removeIndex: constraint.chainIndex });
+    return buildZodChainRemoveMethodFix({
+      fixer,
+      methods,
+      removeIndex: constraint.chainIndex,
+      sourceCode,
+    });
   }
 
   const callArguments = constraint.checkNode.arguments;
@@ -107,9 +114,12 @@ function buildBoundRemoveFix(opts: {
   const target = callArguments[argumentIndex];
 
   // `argumentCount > 1` guarantees a neighbour to swallow the separator with.
-  return argumentIndex === 0
-    ? fixer.removeRange([target.range[0], callArguments[1].range[0]])
-    : fixer.removeRange([callArguments[argumentIndex - 1].range[1], target.range[1]]);
+  const range: TSESTree.Range =
+    argumentIndex === 0
+      ? [target.range[0], callArguments[1].range[0]]
+      : [callArguments[argumentIndex - 1].range[1], target.range[1]];
+
+  return hasCommentInRange(sourceCode, range) ? null : fixer.removeRange(range);
 }
 
 /**
@@ -241,6 +251,7 @@ export function buildCollapseEqualBoundsCreate<TMessageIds extends string>(
               fixer,
               methods: collectZodChainMethods(node),
               constraint: secondBound.constraint,
+              sourceCode: context.sourceCode,
             });
 
             return removeFix === null ? null : [renameFix, removeFix];

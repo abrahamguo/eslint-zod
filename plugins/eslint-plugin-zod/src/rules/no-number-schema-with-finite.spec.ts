@@ -93,5 +93,16 @@ ruleTester.run(noNumberSchemaWithFinite.name, noNumberSchemaWithFinite, {
       errors: [{ messageId: 'removeFinite' }],
       output: null,
     },
+    {
+      name: 'comment in the rewritten text — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        z.number()
+          // keep
+          .finite();
+      `,
+      errors: [{ messageId: 'removeFinite' }],
+      output: null,
+    },
   ],
 });

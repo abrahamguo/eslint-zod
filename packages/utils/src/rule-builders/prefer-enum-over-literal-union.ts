@@ -1,6 +1,7 @@
 import type { TSESLint } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
+import { hasCommentInRange } from '../has-comment-in-range.js';
 import type { ZodImportScope } from '../zod-import-scope.js';
 
 export function buildPreferEnumOverLiteralUnionCreate(
@@ -73,6 +74,11 @@ export function buildPreferEnumOverLiteralUnionCreate(
           messageId: 'useEnum',
           fix(fixer) {
             if (zodSchemaMeta.schemaDecl === 'named' || !union.member) {
+              return null;
+            }
+
+            // The member list is rewritten from the literal values alone.
+            if (hasCommentInRange(context.sourceCode, unionArgument.range)) {
               return null;
             }
 

@@ -194,5 +194,16 @@ ruleTester.run(preferTopLevelStringFormats.name, preferTopLevelStringFormats, {
       errors: [{ messageId: 'preferTopLevelStringFormat' }] as const,
       output: null,
     },
+    {
+      name: 'comment in the rewritten text — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        z.string()
+          // must be an email
+          .email();
+      `,
+      errors: [{ messageId: 'preferTopLevelStringFormat' }],
+      output: null,
+    },
   ],
 });

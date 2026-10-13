@@ -134,5 +134,17 @@ ruleTester.run(preferNullish.name, preferNullish, {
       errors: [{ messageId: 'preferNullish' }],
       output: null,
     },
+    {
+      name: 'comment in the rewritten text — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        z.string()
+          // keep
+          .optional()
+          .nullable();
+      `,
+      errors: [{ messageId: 'preferNullish' }],
+      output: null,
+    },
   ],
 });

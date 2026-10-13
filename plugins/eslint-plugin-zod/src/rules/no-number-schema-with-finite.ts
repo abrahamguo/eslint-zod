@@ -45,6 +45,7 @@ export const noNumberSchemaWithFinite = createZodPluginRule({
               fixer,
               methods: finite.methods,
               removeIndex: finite.index,
+              sourceCode: context.sourceCode,
             });
           },
         });

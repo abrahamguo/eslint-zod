@@ -262,5 +262,16 @@ ruleTester.run(preferTupleOverArrayLength.name, preferTupleOverArrayLength, {
       errors: [{ messageId: 'preferTuple' }],
       output: null,
     },
+    {
+      name: 'comment in the rewritten text — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        z.array(z.string())
+          // keep
+          .length(2);
+      `,
+      errors: [{ messageId: 'preferTuple' }],
+      output: null,
+    },
   ],
 });

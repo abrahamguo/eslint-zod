@@ -202,5 +202,14 @@ ruleTester.run(preferEnumOverLiteralUnion.name, preferEnumOverLiteralUnion, {
         });
       `,
     },
+    {
+      name: 'comment in the rewritten text — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        z.union([z.literal('a'), /* keep */ z.literal('b')]);
+      `,
+      errors: [{ messageId: 'useEnum' }],
+      output: null,
+    },
   ],
 });

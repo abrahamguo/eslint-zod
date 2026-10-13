@@ -225,5 +225,18 @@ ruleTester.run(preferMapSetSizeOverMinMax.name, preferMapSetSizeOverMinMax, {
         z.object({ ids: z.set(z.string()).check(z.size(3)) })
       `,
     },
+    {
+      name: 'comment in the rewritten text — reported without a fix',
+      code: dedent`
+        import * as z from 'zod/mini';
+        z.set(z.string()).check(
+          z.minSize(2),
+          // keep
+          z.maxSize(2),
+        );
+      `,
+      errors: [{ messageId: 'preferMapSetSize' }],
+      output: null,
+    },
   ],
 });

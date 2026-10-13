@@ -30,6 +30,7 @@ export type {
 
 // fixer helpers
 export { buildZodChainRemoveMethodFix } from './build-zod-chain-remove-method-fix.js';
+export { hasCommentInRange } from './has-comment-in-range.js';
 export { hasParenthesizedReceiver } from './has-parenthesized-receiver.js';
 export { buildZodChainReplacementFix } from './build-zod-chain-replacement-fix.js';
 export { buildZodConstraintsRemoveFix } from './build-zod-constraints-remove-fix.js';

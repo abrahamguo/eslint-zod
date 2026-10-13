@@ -22,8 +22,10 @@ export function buildZodConstraintsRemoveFix(opts: {
   /** Chain items from `collectZodChainMethods`, factory first. */
   methods: Array<{ name: string; node: TSESTree.CallExpression }>;
   constraints: Array<ZodSchemaConstraint>;
+  /** When given, a removal that would drop a comment returns `null`. */
+  sourceCode?: Pick<TSESLint.SourceCode, 'getAllComments'>;
 }): Array<TSESLint.RuleFix> | null {
-  const { fixer, methods, constraints } = opts;
+  const { fixer, methods, constraints, sourceCode } = opts;
 
   const fixes: Array<TSESLint.RuleFix> = [];
   // chainIndex of a `.check(...)` call → how many of its arguments are
@@ -36,6 +38,7 @@ export function buildZodConstraintsRemoveFix(opts: {
         fixer,
         methods,
         removeIndex: constraint.chainIndex,
+        sourceCode,
       });
       if (fix === null) {
         return null;
@@ -60,7 +63,12 @@ export function buildZodConstraintsRemoveFix(opts: {
       return null;
     }
 
-    const fix = buildZodChainRemoveMethodFix({ fixer, methods, removeIndex: chainIndex });
+    const fix = buildZodChainRemoveMethodFix({
+      fixer,
+      methods,
+      removeIndex: chainIndex,
+      sourceCode,
+    });
     if (fix === null) {
       return null;
     }

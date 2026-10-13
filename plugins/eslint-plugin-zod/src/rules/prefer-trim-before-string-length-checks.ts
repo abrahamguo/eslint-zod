@@ -1,4 +1,5 @@
-import { hasParenthesizedReceiver, zodImportScope } from '@eslint-zod/utils';
+import { hasCommentInRange, hasParenthesizedReceiver, zodImportScope } from '@eslint-zod/utils';
+import type { TSESTree } from '@typescript-eslint/utils';
 
 import { createZodPluginRule } from '../utils/create-plugin-rule.js';
 import { isRecordKeySchema } from '../utils/is-record-key-schema.js';
@@ -65,10 +66,15 @@ export const preferTrimBeforeStringLengthChecks = createZodPluginRule({
               return null;
             }
 
+            const trimRange: TSESTree.Range = [trimCallee.object.range[1], trimMethodNode.range[1]];
+            if (hasCommentInRange(context.sourceCode, trimRange)) {
+              return null;
+            }
+
             const stringMethodNode = methods[0].node;
 
             return [
-              fixer.removeRange([trimCallee.object.range[1], trimMethodNode.range[1]]),
+              fixer.removeRange(trimRange),
               fixer.insertTextAfter(stringMethodNode, '.trim()'),
             ];
           },

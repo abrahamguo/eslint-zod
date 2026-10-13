@@ -37,6 +37,7 @@ function makeCall(
 function makeSourceCode(textMap: Map<TSESTree.Node, string>): TSESLint.SourceCode {
   return {
     getText: (node: TSESTree.Node) => textMap.get(node) ?? '',
+    getAllComments: () => [],
   } as unknown as TSESLint.SourceCode;
 }
 

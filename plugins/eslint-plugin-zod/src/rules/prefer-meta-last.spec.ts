@@ -238,5 +238,17 @@ ruleTester.run(preferMetaLast.name, preferMetaLast, {
         z.string().min(1).meta({ title: 'A' }).meta({ title: 'B' });
       `,
     },
+    {
+      name: 'comment in the rewritten text — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        z.string()
+          // keep
+          .meta({ a: 1 })
+          .min(1);
+      `,
+      errors: [{ messageId: 'metaNotLast' }],
+      output: null,
+    },
   ],
 });

@@ -1,9 +1,11 @@
 import {
   ZOD_NON_SCHEMA_PRODUCING_METHODS,
+  hasCommentInRange,
   hasParenthesizedReceiver,
   zodImportScope,
 } from '@eslint-zod/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import type { TSESTree } from '@typescript-eslint/utils';
 
 import { createZodPluginRule } from '../utils/create-plugin-rule.js';
 
@@ -65,6 +67,18 @@ export const preferMetaLast = createZodPluginRule({
             }
 
             const source = context.sourceCode;
+            const removals = misplaced.map((it): TSESTree.Range => [
+              it.member.object.range[1],
+              it.node.range[1],
+            ]);
+            // The text between the receiver and `.meta` is dropped by the move.
+            if (
+              misplaced.some((it) =>
+                hasCommentInRange(source, [it.member.object.range[1], it.member.property.range[0]]),
+              )
+            ) {
+              return null;
+            }
 
             // Moved together and in order, so a later `.meta()` still overrides an earlier one.
             const suffix = misplaced
@@ -72,9 +86,7 @@ export const preferMetaLast = createZodPluginRule({
               .join('');
 
             return [
-              ...misplaced.map((it) =>
-                fixer.removeRange([it.member.object.range[1], it.node.range[1]]),
-              ),
+              ...removals.map((range) => fixer.removeRange(range)),
               fixer.insertTextAfterRange(chain[lastOtherIndex].node.range, suffix),
             ];
           },

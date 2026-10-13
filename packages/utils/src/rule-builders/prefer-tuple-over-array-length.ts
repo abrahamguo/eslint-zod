@@ -175,6 +175,7 @@ export function buildPreferTupleOverArrayLengthCreate(
               fixer,
               methods,
               constraints: removable,
+              sourceCode: context.sourceCode,
             });
             if (removeFixes === null) {
               return null;

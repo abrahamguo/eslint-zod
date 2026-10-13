@@ -128,7 +128,12 @@ export function buildNoUnnecessaryReadonlyCreate(
               node: constraint.node,
               messageId: 'unnecessaryReadonly',
               fix: (fixer) =>
-                buildZodConstraintsRemoveFix({ fixer, methods, constraints: [constraint] }),
+                buildZodConstraintsRemoveFix({
+                  fixer,
+                  methods,
+                  constraints: [constraint],
+                  sourceCode: context.sourceCode,
+                }),
             });
           }
         }

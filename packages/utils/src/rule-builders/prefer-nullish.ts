@@ -3,6 +3,7 @@ import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import { buildZodWrapperUnwrapFix } from '../build-zod-wrapper-unwrap-fix.js';
 import type { ZodSchemaMeta } from '../detect-zod-schema-root-node.js';
+import { hasCommentInRange } from '../has-comment-in-range.js';
 import type { ZodChainItem } from '../track-zod-schema-imports.js';
 import type { ZodImportScope } from '../zod-import-scope.js';
 
@@ -137,6 +138,11 @@ export function buildPreferNullishCreate(
             earlierCallee.type !== AST_NODE_TYPES.MemberExpression ||
             laterCallee.type !== AST_NODE_TYPES.MemberExpression ||
             laterCallee.property.type !== AST_NODE_TYPES.Identifier
+          ) {
+            return null;
+          }
+          if (
+            hasCommentInRange(sourceCode, [earlierCallee.object.range[1], earlier.node.range[1]])
           ) {
             return null;
           }
