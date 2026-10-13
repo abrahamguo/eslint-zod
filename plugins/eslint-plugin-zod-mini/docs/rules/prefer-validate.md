@@ -11,7 +11,8 @@
 ## Rule Details
 
 Prefer `validate()` when a `safeParse()` result is used only to read `success`.
-This opt-in rule requires **Zod 4.6 or later** and is not enabled in the recommended configuration.
+This rule requires **Zod 4.6 or later**.
+It is part of the `stylistic` config, not of `recommended`: leave it off with an older Zod.
 
 The rule recognizes direct success access, destructuring of only `success` (including aliases), and local result variables whose reads all access `success`.
 It also handles awaited `safeParseAsync()` calls with `validateAsync()`.

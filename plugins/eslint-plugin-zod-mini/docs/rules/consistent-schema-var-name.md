@@ -43,7 +43,8 @@ Unlike most `consistent-*` rules, this one is in `recommended` rather than `styl
 
 <!-- end auto-generated rule options list -->
 
-When `before` ends in a letter, the suggested name capitalizes the original one so it stays camelCase: with `"before": "z"`, `user` is reported as `zUser`.
+When `before` ends in a letter, the suggested name capitalizes the original one so it stays camelCase: with `"before": "z"` and `"after": ""`, `user` is reported as `zUser`.
+The default `after` still applies when only `before` is set, giving `zUserSchema`.
 Any other prefix is prepended as is (`$user`).
 
 ## Why is there no autofix or suggestion?

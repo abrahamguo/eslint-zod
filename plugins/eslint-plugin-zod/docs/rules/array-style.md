@@ -8,7 +8,7 @@
 
 <!-- end auto-generated rule header -->
 
-## Rule details
+## Rule Details
 
 This rule enforces a single, consistent style for defining Zod arrays: either the function style (`z.array(schema)`) or the method style (`schema.array()`).
 

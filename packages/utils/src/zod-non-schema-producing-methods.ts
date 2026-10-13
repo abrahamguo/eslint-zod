@@ -20,7 +20,7 @@ export const ZOD_NON_SCHEMA_PRODUCING_METHODS = Object.freeze([
   'safeDecode',
   'safeDecodeAsync',
 
-  // validation predicates (zod 4.5) — `boolean` / `Promise<boolean>`, not a schema
+  // validation predicates (zod 4.6) — `boolean` / `Promise<boolean>`, not a schema
   'validate',
   'validateAsync',
 

@@ -6,7 +6,7 @@
 
 <!-- end auto-generated rule header -->
 
-## Rule details
+## Rule Details
 
 This ESLint rule detects **transforms in `z.record()` key schemas** and prevents them.
 
@@ -98,7 +98,7 @@ This rule should always be enabled. Disabling it would reintroduce the risk of s
 
 If you genuinely need to normalize keys before use, consider normalizing them at a different layer of your code, not in the record schema itself.
 
-## Further reading
+## Further Reading
 
 - [Zod - Records](https://zod.dev/api?id=records)
 - [Zod - Transforms](https://zod.dev/api?id=transform)

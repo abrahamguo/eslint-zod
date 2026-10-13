@@ -74,7 +74,7 @@ z.string()
 
 ## Auto-fixes
 
-This rule can automatically fix three types of issues:
+This rule can automatically fix two types of issues:
 
 1. Replace deprecated `message` property with `error`:
 

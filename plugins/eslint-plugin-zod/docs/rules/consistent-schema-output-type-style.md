@@ -8,7 +8,7 @@
 
 <!-- end auto-generated rule header -->
 
-## Rule details
+## Rule Details
 
 In Zod v4, `z.infer<typeof Schema>` and `z.output<typeof Schema>` are functionally equivalent — both represent the output type of a schema. This rule enforces a single consistent style across the codebase.
 

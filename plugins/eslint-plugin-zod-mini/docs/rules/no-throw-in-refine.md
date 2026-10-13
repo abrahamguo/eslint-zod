@@ -6,7 +6,7 @@
 
 <!-- end auto-generated rule header -->
 
-## Rule details
+## Rule Details
 
 This ESLint rule detects and prevents `throw` statements directly inside Zod Mini `z.refine()` callbacks.
 It ignores throws in nested functions but ensures the call is a **Zod Mini expression**.
@@ -58,6 +58,6 @@ z.string().check(
 );
 ```
 
-## Further readings
+## Further Reading
 
 - [Zod - Refinements](https://zod.dev/api?id=refinements)

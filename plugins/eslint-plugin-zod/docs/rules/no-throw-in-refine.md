@@ -6,7 +6,7 @@
 
 <!-- end auto-generated rule header -->
 
-## Rule details
+## Rule Details
 
 This ESLint rule detects and prevents **throw statements directly inside Zod `.refine()` callbacks**.
 It ignores throws in nested functions but ensures the call is a **Zod expression**.
@@ -45,6 +45,6 @@ z.string().refine((val) => {
 });
 ```
 
-## Further readings
+## Further Reading
 
 - [Zod - Refinements](https://zod.dev/api?id=refinements)

@@ -47,7 +47,7 @@ Every entry uses **named exports only** — the per-package config file is where
 pnpm build          # build all packages
 pnpm test           # run all test suites
 pnpm test:coverage  # run all test suites with coverage + thresholds
-pnpm typecheck      # tsc -b (project references, no emit)
+pnpm typecheck      # tsc -b (project references; declarations go to dist/ts)
 pnpm lint           # lint:js + lint:docs + lint:knip
 pnpm lint:publish   # attw per published package (needs a build first)
 pnpm format         # prettier --write
@@ -104,7 +104,7 @@ AST helpers exported from `@eslint-zod/utils`:
 - `hasCommentInRange(sourceCode, range)` — whether a comment sits inside a range. A fixer that removes or rewrites text must check it and withhold the fix rather than drop the comment; the chain fixer helpers do so when given a `sourceCode`
 - `hasParenthesizedReceiver(member)` — whether a member's object is parenthesized (`(z.string()).min(1)`). A fixer that cuts at `member.object.range[1]` must check it and withhold the fix, or it leaves the closing parenthesis behind; both helpers above already do
 - `buildZodConstraintsRemoveFix` — removes a set of `ZodSchemaConstraint`s from a chain, whatever their origin: chained constraints are removed as methods; check-argument constraints remove the whole containing `.check(...)`, but only when every argument of that call is targeted (never orphans an unrelated check). Returns `null` when removal is unsafe, so callers report without fixing.
-- `buildZodWrapperUnwrapFix` — replaces a single-argument wrapper call with its argument (e.g. `z.readonly(z.string())` → `z.string()`), preserving any chain on the wrapper; returns `null` when the call doesn't have exactly one non-spread argument, when that argument is not an identifier, member or call (it could need parentheses), or when a comment would be dropped.
+- `buildZodWrapperUnwrapFix` — replaces a single-argument wrapper call with its argument (e.g. `z.readonly(z.string())` → `z.string()`), preserving any chain on the wrapper; returns `null` when the call doesn't have exactly one non-spread argument, when that argument is not an identifier, member or call and the wrapper is not itself an argument (it could need parentheses), or when a comment would be dropped.
 - `zodImportScope` / `zodMiniImportScope` / `zodCoreImportScope` — pre-built `ZodImportScope` instances; use `scope.isAllowed(source)` to check whether a source belongs to the plugin's scope
 - `ZOD_NON_SCHEMA_PRODUCING_METHODS` — array of method names that do not return a schema (parse, codec, error formatters)
 - `isZodSchemaFactoryName(name)` / `isZodSchemaFactoryCall(meta)` — whether a factory, or a detected chain, builds a schema.
@@ -137,7 +137,7 @@ When part of a shared rule's behavior is genuinely plugin-specific (i.e. it cann
 
 ### Rule patterns
 
-A rule builder is keyed to one rule name and exists to share logic _between plugins_. When two or more rules have the same shape and differ only in the names they mention — a deprecated method, a factory to prefer — that shape belongs in `packages/utils/src/rule-patterns/` instead, even when all its callers live in one plugin. Sharing across plugins is not a requirement there; five patterns currently back twelve `eslint-plugin-zod` rules and two `eslint-plugin-zod-mini` ones.
+A rule builder is keyed to one rule name and exists to share logic _between plugins_. When two or more rules have the same shape and differ only in the names they mention — a deprecated method, a factory to prefer — that shape belongs in `packages/utils/src/rule-patterns/` instead, even when all its callers live in one plugin. Sharing across plugins is not a requirement there; five patterns currently back eleven `eslint-plugin-zod` rules and two `eslint-plugin-zod-mini` ones.
 
 Do not extract a pattern when the rules differ in their _fix strategy_ rather than in names — `no-number-schema-with-step` (rename the property) and `no-number-schema-with-safe` (replace a run of methods) look alike but would need two implementations behind one switch, which dedupes nothing.
 
@@ -178,15 +178,15 @@ z.string().check(z.describe('desc')); // z.describe is a standalone call
 z.string().check(z.meta({ description: 'desc' }));
 ```
 
-Methods that ARE chained in `zod/mini`: `check()`, `brand()`, `parse()`, `safeParse()`, `parseAsync()`, `safeParseAsync()`.
+Methods that ARE chained in `zod/mini`: `check()` and its alias `with()`, `brand()`, `clone()`, `parse()`, `safeParse()`, `parseAsync()`, `safeParseAsync()`.
 
-**Never mix the two styles.** Chained validation methods belong to `zod`; standalone `$ZodCheck` calls inside `.check(...)` belong to `zod/mini` (`zod`'s own `.check()` accepts only refinement callbacks, and `zod/mini`'s checks are type-specific: `z.minLength`/`z.maxLength` for strings & arrays, `z.gte`/`z.lte` for numbers, `z.minSize`/`z.maxSize` for sets & maps — there is no `z.min`/`z.max`). Invalid code such as `z.string().check(z.minLength(1))` (`zod`), `z.array(x).min(2).check(z.maxLength(2))` (mixed), or `z.string().check(z.min(2))` (`zod/mini`) must never appear in specs, docs, changesets, or examples. Shared utilities may handle both constraint origins so one rule builder serves both plugins, but each plugin's specs and docs exercise only its own style.
+**Never mix the two styles.** Chained validation methods belong to `zod`; standalone `$ZodCheck` calls inside `.check(...)` belong to `zod/mini` (`zod`'s `.check()` does accept `$ZodCheck` calls, but the chained method is its idiom and the only one `eslint-plugin-zod` targets; `zod/mini`'s checks are type-specific: `z.minLength`/`z.maxLength` for strings & arrays, `z.gte`/`z.lte` for numbers, `z.minSize`/`z.maxSize` for sets & maps — there is no `z.min`/`z.max`). Code such as `z.string().check(z.minLength(1))` (`zod`), `z.array(x).min(2).check(z.maxLength(2))` (mixed), or `z.string().check(z.min(2))` (`zod/mini`) must never appear in specs, docs, changesets, or examples. Shared utilities may handle both constraint origins so one rule builder serves both plugins, but each plugin's specs and docs exercise only its own style.
 
 ### Consequence for rule authoring
 
 Rules that look for chained methods (via `tracker.collectZodChainMethods`) work correctly in both plugins because `detectZodSchemaRootNode` identifies the outermost call — including calls in argument position (e.g. `z.refine(fn)` inside `.check(z.refine(fn))` is the root of its own expression).
 
-The exception is `prefer-meta` in `eslint-plugin-zod-mini`: since `z.describe()` is not a chain method, detection uses direct namespace/import tracking (`isZodNamespace`, `getNamedImportOriginal`) instead of `tracker.collectZodChainMethods`.
+The exception is `prefer-meta` in `eslint-plugin-zod-mini`: since `z.describe()` is not a chain method, it filters the visitor on the `describe` factory (`createSchemaVisitor({ schemaType: 'describe' })`) instead of searching the chain for a method.
 
 ## Shared rules between plugins
 

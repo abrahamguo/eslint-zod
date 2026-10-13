@@ -79,7 +79,7 @@ export function buildPreferTupleOverArrayLengthCreate(
           }
         }
 
-        // Nothing to flag. (`nonempty` on its own is the idiomatic typed form.)
+        // Nothing to flag. (`nonempty` on its own is left alone.)
         if (candidates.length === 0) {
           return;
         }

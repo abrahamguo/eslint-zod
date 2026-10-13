@@ -59,7 +59,7 @@ z.tuple([z.string(), z.string()]);
 // A variable-length array without a length constraint is fine
 z.array(z.string());
 
-// `nonempty()` already produces a typed `[string, ...string[]]`
+// `nonempty()` on its own is left alone
 z.array(z.string()).nonempty();
 ```
 

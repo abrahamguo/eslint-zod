@@ -18,7 +18,7 @@ Imports from `zod/mini` or `zod/v4-mini` are out of scope and are never flagged 
 
 ---
 
-This rule is disabled by default since equivalent behavior can be enforced by other, more specialized rules.
+This rule is part of the `stylistic` config only, since equivalent behavior can be enforced by other, more specialized rules.
 
 - <https://eslint.org/docs/latest/rules/no-restricted-imports>
 - <https://typescript-eslint.io/rules/no-restricted-imports>
