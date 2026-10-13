@@ -56,6 +56,7 @@ describe.each(CONFIG_NAMES)('%s config', (configName) => {
     expect(config).toBeTypeOf('object');
     expect(config.name).toBe(`eslint-plugin-zod/${configName}`);
     expect(config.plugins).toHaveProperty('zod');
+    expect(config).toHaveProperty('files', ['**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}']);
     expect(config.rules).toBeTypeOf('object');
   });
 

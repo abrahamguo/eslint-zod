@@ -83,7 +83,7 @@ const eslintPluginZodMini = {
 function createConfig(name: string, rules: Linter.RulesRecord): CompatibleConfig {
   return {
     name: `${PLUGIN_NAME}/${name}`,
-    files: ['**/*.{js,mjs,cjs,jsx,mjsx,ts,tsx,mtsx}'],
+    files: ['**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}'],
     plugins: {
       'zod-mini': eslintPluginZodMini,
     },

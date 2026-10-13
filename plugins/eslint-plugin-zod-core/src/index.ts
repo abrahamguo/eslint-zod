@@ -32,7 +32,7 @@ const eslintPluginZodCore = {
 
 const baseConfig = {
   name: `${PLUGIN_NAME}/recommended`,
-  files: ['**/*.{js,mjs,cjs,jsx,mjsx,ts,tsx,mtsx}'],
+  files: ['**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}'],
   plugins: {
     'zod-core': eslintPluginZodCore,
   },

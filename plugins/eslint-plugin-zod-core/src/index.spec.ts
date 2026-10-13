@@ -47,6 +47,7 @@ describe('recommended config', () => {
     expect(recommendedConfig).toBeTypeOf('object');
     expect(recommendedConfig.name).toBe('eslint-plugin-zod-core/recommended');
     expect(recommendedConfig.plugins).toHaveProperty('zod-core');
+    expect(recommendedConfig).toHaveProperty('files', ['**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}']);
     expect(recommendedConfig.rules).toBeTypeOf('object');
   });
 
