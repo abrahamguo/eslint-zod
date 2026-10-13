@@ -8,6 +8,14 @@ const ruleTester = new RuleTester();
 ruleTester.run(preferMetaLast.name, preferMetaLast, {
   valid: [
     {
+      name: 'meta() is the last schema method before a parse call',
+      code: dedent`
+        import * as z from 'zod';
+        z.string().min(1).meta({ a: 1 }).parse(x);
+        z.string().meta({ a: 1 }).safeParse(x);
+      `,
+    },
+    {
       name: 'namespace import',
       code: dedent`
         import * as z from 'zod';
@@ -205,6 +213,30 @@ ruleTester.run(preferMetaLast.name, preferMetaLast, {
       `,
       errors: [{ messageId: 'metaNotLast' }],
       output: null,
+    },
+    {
+      name: 'meta() is moved before a parse call, not after it',
+      code: dedent`
+        import * as z from 'zod';
+        z.string().meta({ a: 1 }).min(1).parse(x);
+      `,
+      errors: [{ messageId: 'metaNotLast' }],
+      output: dedent`
+        import * as z from 'zod';
+        z.string().min(1).meta({ a: 1 }).parse(x);
+      `,
+    },
+    {
+      name: 'a moved meta() stays ahead of a later one',
+      code: dedent`
+        import * as z from 'zod';
+        z.string().meta({ title: 'A' }).min(1).meta({ title: 'B' });
+      `,
+      errors: [{ messageId: 'metaNotLast' }],
+      output: dedent`
+        import * as z from 'zod';
+        z.string().min(1).meta({ title: 'A' }).meta({ title: 'B' });
+      `,
     },
   ],
 });

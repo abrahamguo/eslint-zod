@@ -53,6 +53,14 @@ z.string().min(5).max(10).meta({ a: 1 }).meta({ b: 2 });
 z.string().min(5).max(10);
 ```
 
+## Autofix Behavior
+
+The fix moves every misplaced `.meta()` after the last other schema method, keeping their order,
+so a later `.meta()` still overrides an earlier one.
+A parse call (`.parse()`, `.safeParse()`, …) ends the schema, so `.meta()` is moved before it.
+
+Moving `.meta()` past a method that wraps the schema (`.optional()`, `.array()`, `.transform()`) attaches the metadata to the wrapper instead of the inner schema.
+
 ## When Not To Use It
 
 If you have a specific need to call methods after `.meta()` or if you're working with a codebase that has an established different convention for metadata placement, you might want to disable this rule.

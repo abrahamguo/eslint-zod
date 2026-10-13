@@ -1,4 +1,8 @@
-import { hasParenthesizedReceiver, zodImportScope } from '@eslint-zod/utils';
+import {
+  ZOD_NON_SCHEMA_PRODUCING_METHODS,
+  hasParenthesizedReceiver,
+  zodImportScope,
+} from '@eslint-zod/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import { createZodPluginRule } from '../utils/create-plugin-rule.js';
@@ -26,62 +30,52 @@ export const preferMetaLast = createZodPluginRule({
       // If not inside a schema root AND doesn't look like a zod chain, bail out.
       // This preserves previous behavior while allowing standalone zod chains to be processed.
       onSchema(node): void {
-        // Collect the full chain methods
-        const chain = collectZodChainMethods(node);
+        const fullChain = collectZodChainMethods(node);
 
-        // Find the first meta() in the chain
-        const metaIndex = chain.findIndex((c) => c.name === 'meta');
-        if (metaIndex === -1) {
-          return;
-        }
-
-        const metaCall = chain[metaIndex].node;
-        const metaCallCallee = metaCall.callee;
+        // `.parse(x)` and its kin end the schema: what follows is not a schema method.
+        const end = fullChain.findIndex(
+          (c, index) => index > 0 && ZOD_NON_SCHEMA_PRODUCING_METHODS.includes(c.name),
+        );
+        const chain = end === -1 ? fullChain : fullChain.slice(0, end);
 
         // A `meta` called bare or on the namespace is a factory, not the `.meta()` method.
-        if (
-          metaCallCallee.type !== AST_NODE_TYPES.MemberExpression ||
-          metaCallCallee.object.type === AST_NODE_TYPES.Identifier
-        ) {
+        const metaMembers = chain.map((c) =>
+          c.name === 'meta' && c.member?.object.type !== AST_NODE_TYPES.Identifier
+            ? c.member
+            : null,
+        );
+
+        // Trailing `.meta()` calls are fine; the ones before the last other method are not.
+        const lastOtherIndex = metaMembers.lastIndexOf(null);
+        const misplaced = chain.flatMap((c, index) => {
+          const member = metaMembers[index];
+          return member && index < lastOtherIndex ? [{ node: c.node, member }] : [];
+        });
+        if (misplaced.length === 0) {
           return;
         }
 
-        // If there are only meta() calls after the first meta -> valid (allow multiple metas at end)
-        const hasAnyNonMetaAfter = chain.slice(metaIndex + 1).some((c) => c.name !== 'meta');
-        if (!hasAnyNonMetaAfter) {
-          return;
-        }
-
-        // Report the first offending `.meta(...)`
         context.report({
-          node: metaCallCallee.property,
+          node: misplaced[0].member.property,
           messageId: 'metaNotLast',
           fix(fixer) {
             // Cutting at the receiver's end would leave a closing parenthesis behind.
-            if (hasParenthesizedReceiver(metaCallCallee)) {
+            if (misplaced.some((it) => hasParenthesizedReceiver(it.member))) {
               return null;
             }
 
             const source = context.sourceCode;
 
-            // "z.string().meta({...})"
-            const metaCallText = source.getText(metaCall);
-
-            // Extract ONLY ".meta(...)" from the call text:
-            // The metaCall.callee.object gives us the part BEFORE `.meta`
-            const objectText = source.getText(metaCallCallee.object);
-            const onlyMetaSuffix = metaCallText.slice(objectText.length); // => ".meta({...})"
-
-            // Remove `.meta(...)` where it currently is
-            const [, removeStart] = metaCallCallee.object.range;
-            const [, removeEnd] = metaCall.range;
-
-            // Last call in the chain:
-            const lastCall = chain[chain.length - 1].node;
+            // Moved together and in order, so a later `.meta()` still overrides an earlier one.
+            const suffix = misplaced
+              .map((it) => source.getText(it.node).slice(source.getText(it.member.object).length))
+              .join('');
 
             return [
-              fixer.removeRange([removeStart, removeEnd]),
-              fixer.insertTextAfterRange(lastCall.range, onlyMetaSuffix),
+              ...misplaced.map((it) =>
+                fixer.removeRange([it.member.object.range[1], it.node.range[1]]),
+              ),
+              fixer.insertTextAfterRange(chain[lastOtherIndex].node.range, suffix),
             ];
           },
         });
