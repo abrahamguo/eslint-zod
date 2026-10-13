@@ -1,5 +1,5 @@
+import { AST_NODE_TYPES } from '@typescript-eslint/types';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import { buildZodWrapperUnwrapFix } from '../build-zod-wrapper-unwrap-fix.js';
 import type { ZodSchemaMeta } from '../detect-zod-schema-root-node.js';

@@ -1,5 +1,7 @@
-import type { TSESTree } from '@typescript-eslint/utils';
-import { ASTUtils, AST_NODE_TYPES, TSESLint } from '@typescript-eslint/utils';
+import { DefinitionType } from '@typescript-eslint/scope-manager';
+import { AST_NODE_TYPES } from '@typescript-eslint/types';
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
+import { findVariable } from '@typescript-eslint/utils/ast-utils';
 
 import { collectZodSchemaConstraints } from './collect-zod-schema-constraints.js';
 import type { ZodSchemaConstraint } from './collect-zod-schema-constraints.js';
@@ -376,11 +378,11 @@ export function trackZodSchemaImports(
     if (!sourceCode) {
       throw new Error('resolveZodImport needs a tracker created with a `sourceCode`.');
     }
-    const variable = ASTUtils.findVariable(sourceCode.getScope(node), node.name);
+    const variable = findVariable(sourceCode.getScope(node), node.name);
     // more than one definition means the binding is re-declared, so the import does not settle its value
     const definition = variable?.defs.length === 1 ? variable.defs[0] : undefined;
     if (
-      definition?.type !== TSESLint.Scope.DefinitionType.ImportBinding ||
+      definition?.type !== DefinitionType.ImportBinding ||
       definition.node.type === AST_NODE_TYPES.TSImportEqualsDeclaration
     ) {
       return null;

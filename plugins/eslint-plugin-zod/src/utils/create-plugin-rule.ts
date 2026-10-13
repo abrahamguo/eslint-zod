@@ -1,5 +1,5 @@
-import { ESLintUtils } from '@typescript-eslint/utils';
+import { RuleCreator } from '@typescript-eslint/utils/eslint-utils';
 
 import { getRuleURL } from '../meta.js';
 
-export const createZodPluginRule = ESLintUtils.RuleCreator(getRuleURL);
+export const createZodPluginRule = RuleCreator(getRuleURL);

@@ -1,4 +1,4 @@
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES } from '@typescript-eslint/types';
 
 import type { ZodSchemaConstraint } from './collect-zod-schema-constraints.js';
 import type { ZodSchemaBaseType } from './get-zod-schema-base-type.js';

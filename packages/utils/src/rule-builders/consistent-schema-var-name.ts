@@ -1,5 +1,5 @@
+import { AST_NODE_TYPES } from '@typescript-eslint/types';
 import type { TSESLint } from '@typescript-eslint/utils';
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import { getZodChainedMethodNames } from '../get-zod-chained-method-names.js';
 import type { ZodImportScope } from '../zod-import-scope.js';

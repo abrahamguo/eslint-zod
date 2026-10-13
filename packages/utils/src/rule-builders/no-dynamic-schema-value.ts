@@ -1,5 +1,7 @@
-import type { TSESTree } from '@typescript-eslint/utils';
-import { ASTUtils, AST_NODE_TYPES, TSESLint } from '@typescript-eslint/utils';
+import { DefinitionType } from '@typescript-eslint/scope-manager';
+import { AST_NODE_TYPES } from '@typescript-eslint/types';
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
+import { findVariable } from '@typescript-eslint/utils/ast-utils';
 
 import type { ZodImportScope } from '../zod-import-scope.js';
 import { isZodNonSchemaHelperCall } from '../zod-non-schema-helper-names.js';
@@ -74,21 +76,18 @@ function isStaticExpression(node: TSESTree.Node, state: StaticCheckState): boole
       );
 
     case AST_NODE_TYPES.Identifier: {
-      const def = ASTUtils.findVariable(state.context.sourceCode.getScope(node), node)?.defs[0];
+      const def = findVariable(state.context.sourceCode.getScope(node), node)?.defs[0];
       if (!def) {
         return false;
       }
 
       // A hoisted declaration is a function literal, exactly like `const f = () => {}`.
-      if (
-        def.type === TSESLint.Scope.DefinitionType.ImportBinding ||
-        def.type === TSESLint.Scope.DefinitionType.FunctionName
-      ) {
+      if (def.type === DefinitionType.ImportBinding || def.type === DefinitionType.FunctionName) {
         return true;
       }
 
       if (
-        def.type !== TSESLint.Scope.DefinitionType.Variable ||
+        def.type !== DefinitionType.Variable ||
         def.parent.kind !== 'const' ||
         def.node.init === null ||
         state.resolving.has(def.node)

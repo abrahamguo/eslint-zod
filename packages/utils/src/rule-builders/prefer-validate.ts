@@ -1,5 +1,7 @@
-import type { TSESTree } from '@typescript-eslint/utils';
-import { ASTUtils, AST_NODE_TYPES, TSESLint } from '@typescript-eslint/utils';
+import { DefinitionType } from '@typescript-eslint/scope-manager';
+import { AST_NODE_TYPES } from '@typescript-eslint/types';
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
+import { findVariable } from '@typescript-eslint/utils/ast-utils';
 
 import { getStaticPropertyName } from '../get-static-property-name.js';
 import type { ZodImportScope } from '../zod-import-scope.js';
@@ -48,7 +50,7 @@ export function buildPreferValidateCreate(
     const identifiers = new Set<string>();
 
     function variable(node: TSESTree.Identifier): TSESLint.Scope.Variable | null {
-      return ASTUtils.findVariable(sourceCode.getScope(node), node.name);
+      return findVariable(sourceCode.getScope(node), node.name);
     }
 
     function schemaSource(
@@ -63,7 +65,7 @@ export function buildPreferValidateCreate(
         seen.add(found);
         const [definition] = found.defs;
         if (
-          definition.type !== TSESLint.Scope.DefinitionType.Variable ||
+          definition.type !== DefinitionType.Variable ||
           definition.parent.kind !== 'const' ||
           definition.node.id.type !== AST_NODE_TYPES.Identifier ||
           !definition.node.init ||
@@ -168,7 +170,7 @@ export function buildPreferValidateCreate(
         .filter(
           (item) =>
             item.declaration.source.value === declaration.source.value &&
-            ASTUtils.findVariable(sourceCode.getScope(at), item.local.name)?.defs[0]?.node ===
+            findVariable(sourceCode.getScope(at), item.local.name)?.defs[0]?.node ===
               item.local.parent,
         );
       const named = accessible.find((item) => item.name === name);

@@ -1,5 +1,5 @@
+import { AST_NODE_TYPES } from '@typescript-eslint/types';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import type { ZodImportScope } from '../zod-import-scope.js';
 import { isZodSchemaFactoryCall } from '../zod-schema-factory-names.js';

@@ -1,5 +1,5 @@
 import { ZOD_TYPE_CHANGING_METHODS, zodImportScope } from '@eslint-zod/utils';
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES } from '@typescript-eslint/types';
 
 import { createZodPluginRule } from '../utils/create-plugin-rule.js';
 

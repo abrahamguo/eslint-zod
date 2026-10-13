@@ -40,6 +40,37 @@ export default defineConfig(
       ],
     },
   },
+  {
+    // The root of `@typescript-eslint/utils` and its `ts-eslint` entry load `eslint` at import time,
+    // which is only an optional peer: runtime code goes through the entry points that do not.
+    files: ['packages/utils/src/**/*.ts', 'plugins/*/src/**/*.ts'],
+    ignores: ['**/*.spec.ts'],
+    rules: {
+      '@typescript-eslint/no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@typescript-eslint/utils',
+              allowTypeImports: true,
+              message:
+                'Import values from `@typescript-eslint/types`, `@typescript-eslint/scope-manager`, `@typescript-eslint/utils/ast-utils` or `@typescript-eslint/utils/eslint-utils`.',
+            },
+            {
+              name: '@typescript-eslint/utils/ts-eslint',
+              allowTypeImports: true,
+              message: 'This entry loads `eslint`: import types only.',
+            },
+            {
+              name: 'eslint',
+              allowTypeImports: true,
+              message: '`eslint` is an optional peer: import types only.',
+            },
+          ],
+        },
+      ],
+    },
+  },
   configVitest,
   {
     ...pluginEslintPlugin.configs.recommended,

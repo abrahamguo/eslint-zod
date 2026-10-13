@@ -150,6 +150,14 @@ Each package has a `@eslint-zod/source` custom export condition pointing to its 
 - `tsconfig.json` — used by `tsc -b`. Has `composite: true`, `outDir`, and `references` to other workspace packages for correct incremental build ordering.
 - `tsconfig.eslint.json` — used by `eslint.config.js` (`parserOptions.project`). Has no `composite`, no `references`, and no `outDir`. Without project references, `@typescript-eslint/parser` resolves cross-package imports via `customConditions` → source, so type errors in `@eslint-zod/utils` propagate live to plugin callers in both the CLI and the IDE ESLint extension.
 
+### Runtime imports from typescript-eslint
+
+`eslint` is an optional peer, so the plugins must load without it (the oxlint-only install).
+The root of `@typescript-eslint/utils` loads `eslint` at import time (so does its `ts-eslint` entry), so runtime code never imports values from it:
+`AST_NODE_TYPES` comes from `@typescript-eslint/types`, `DefinitionType` from `@typescript-eslint/scope-manager`,
+`findVariable` from `@typescript-eslint/utils/ast-utils` and `RuleCreator` from `@typescript-eslint/utils/eslint-utils`.
+Type-only imports from the root are fine, and a `no-restricted-imports` entry in `eslint.config.js` enforces the split.
+
 ## zod vs zod/mini API differences
 
 This is the most important thing to know when working on `eslint-plugin-zod-mini` rules.

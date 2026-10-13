@@ -1,5 +1,5 @@
+import { AST_NODE_TYPES } from '@typescript-eslint/types';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import { buildZodChainRemoveMethodFix } from '../build-zod-chain-remove-method-fix.js';
 import type { ZodSchemaConstraint } from '../collect-zod-schema-constraints.js';
