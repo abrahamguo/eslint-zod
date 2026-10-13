@@ -14,43 +14,32 @@ export function buildNoAnySchemaCreate(
     return createSchemaVisitor({
       schemaType: 'any',
       onSchema(node): void {
-        const { callee } = node;
-
-        if (callee.type === AST_NODE_TYPES.Identifier) {
-          context.report({
-            node,
-            messageId: 'noZAny',
-          });
+        // A call of a call (`z.any()()`) is left alone.
+        if (
+          node.callee.type !== AST_NODE_TYPES.Identifier &&
+          node.callee.type !== AST_NODE_TYPES.MemberExpression
+        ) {
           return;
         }
 
-        if (callee.type === AST_NODE_TYPES.MemberExpression) {
-          // The chain is empty when the factory is not a plain member access (e.g. `z['any']()`),
-          // and its callee is a bare identifier for a named import (`any().optional()`).
-          // Neither can be renamed, so both fall through to the plain report below.
-          const schemaMethodCallee = collectZodChainMethods(node).at(0)?.member;
+        // No member for a named import (`any()`) or a computed factory (`z['any']()`):
+        // neither can be renamed, so those are reported without the suggestion.
+        const factoryCallee = collectZodChainMethods(node).at(0)?.member;
 
-          if (schemaMethodCallee) {
-            context.report({
-              node,
-              messageId: 'noZAny',
-              suggest: [
+        context.report({
+          node,
+          messageId: 'noZAny',
+          suggest: factoryCallee
+            ? [
                 {
                   messageId: 'useUnknown',
                   fix(fixer): TSESLint.RuleFix {
-                    return fixer.replaceText(schemaMethodCallee.property, 'unknown');
+                    return fixer.replaceText(factoryCallee.property, 'unknown');
                   },
                 },
-              ],
-            });
-            return;
-          }
-
-          context.report({
-            node,
-            messageId: 'noZAny',
-          });
-        }
+              ]
+            : [],
+        });
       },
     });
   };

@@ -31,32 +31,30 @@ export function buildConsistentObjectSchemaTypeCreate(
 
         const { callee } = node;
 
-        if (callee.type === AST_NODE_TYPES.Identifier) {
-          context.report({
-            node,
-            messageId: 'consistentMethod',
-            data: { actual: schemaType, allowedList: allowedList.join(',') },
-          });
+        // A call of a call (`z.object({})()`) is left alone.
+        if (
+          callee.type !== AST_NODE_TYPES.Identifier &&
+          callee.type !== AST_NODE_TYPES.MemberExpression
+        ) {
           return;
         }
 
-        if (callee.type === AST_NODE_TYPES.MemberExpression) {
-          context.report({
-            node,
-            messageId: 'consistentMethod',
-            data: {
-              actual: schemaType,
-              allowedList: allowedList.join(','),
-            },
-            suggest: allowedList.map<TSESLint.ReportSuggestionArray<MessageIds>[number]>((it) => ({
-              messageId: 'useMethod',
-              data: { expected: it },
-              fix(fixer): TSESLint.RuleFix {
-                return fixer.replaceText(callee.property, it);
-              },
-            })),
-          });
-        }
+        context.report({
+          node,
+          messageId: 'consistentMethod',
+          data: { actual: schemaType, allowedList: allowedList.join(',') },
+          // A named import (`object()`) has no property to rename.
+          suggest:
+            callee.type === AST_NODE_TYPES.MemberExpression
+              ? allowedList.map<TSESLint.ReportSuggestionArray<MessageIds>[number]>((it) => ({
+                  messageId: 'useMethod',
+                  data: { expected: it },
+                  fix(fixer): TSESLint.RuleFix {
+                    return fixer.replaceText(callee.property, it);
+                  },
+                }))
+              : [],
+        });
       },
     });
   };
