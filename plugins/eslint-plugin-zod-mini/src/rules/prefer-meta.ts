@@ -1,5 +1,5 @@
 import { zodMiniImportScope } from '@eslint-zod/utils';
-import type { TSESTree } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import { createZodMiniPluginRule } from '../utils/create-plugin-rule.js';
 
@@ -19,30 +19,29 @@ export const preferMeta = createZodMiniPluginRule({
   },
   defaultOptions: [],
   create(context) {
-    const { createSchemaVisitor } = zodMiniImportScope.createTracker({ kind: 'value' });
+    const { createSchemaVisitor, collectZodChainMethods } = zodMiniImportScope.createTracker({
+      kind: 'value',
+    });
 
     return createSchemaVisitor({
       schemaType: 'describe',
-      onSchema(node, zodSchemaMeta) {
+      onSchema(node) {
+        // The `describe` call itself: `node` is the outermost call, which differs once something is chained on it.
+        // Empty for a computed factory (`z['describe'](…)`), which detection still resolves.
+        const describeCall = collectZodChainMethods(node).at(0)?.node;
+
         context.report({
           node,
           messageId: 'preferMeta',
           fix(fixer) {
-            if (zodSchemaMeta.schemaDecl === 'named') {
+            const callee = describeCall?.callee;
+            const describeArg = describeCall?.arguments.at(0);
+
+            // A named import (`describe('…')`) has no property to rename,
+            // and a call without an argument has nothing to wrap.
+            if (callee?.type !== AST_NODE_TYPES.MemberExpression || !describeArg) {
               return null;
             }
-
-            // A namespace schema is detected only when its factory is a member of the namespace,
-            // so this call is always `<ns>.<factory>(…)`.
-            const callee = node.callee as TSESTree.MemberExpression;
-
-            // …but the key may be computed (`z['describe'](…)`), which detection still resolves.
-            // The property is then the string literal, so renaming it would emit `z[meta](…)`.
-            if (callee.computed) {
-              return null;
-            }
-
-            const [describeArg] = node.arguments;
 
             return [
               fixer.replaceText(callee.property, 'meta'),

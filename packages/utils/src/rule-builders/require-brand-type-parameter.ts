@@ -1,4 +1,5 @@
-import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
+import type { TSESLint } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import type { ZodImportScope } from '../zod-import-scope.js';
 
@@ -28,7 +29,15 @@ export function buildRequireBrandTypeParameterCreate(
           return;
         }
 
-        const brandCalleeNode = brandNode.callee as TSESTree.MemberExpression;
+        const brandCalleeNode = brandNode.callee;
+
+        // A `brand` called bare or on the namespace is a factory, not the `.brand()` method.
+        if (
+          brandCalleeNode.type !== AST_NODE_TYPES.MemberExpression ||
+          brandCalleeNode.object.type === AST_NODE_TYPES.Identifier
+        ) {
+          return;
+        }
 
         context.report({
           messageId: 'missingTypeParameter',

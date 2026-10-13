@@ -1,5 +1,5 @@
 import { zodImportScope } from '@eslint-zod/utils';
-import type { TSESTree } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import { createZodPluginRule } from '../utils/create-plugin-rule.js';
 
@@ -35,6 +35,17 @@ export const preferMetaLast = createZodPluginRule({
           return;
         }
 
+        const metaCall = chain[metaIndex].node;
+        const metaCallCallee = metaCall.callee;
+
+        // A `meta` called bare or on the namespace is a factory, not the `.meta()` method.
+        if (
+          metaCallCallee.type !== AST_NODE_TYPES.MemberExpression ||
+          metaCallCallee.object.type === AST_NODE_TYPES.Identifier
+        ) {
+          return;
+        }
+
         // If there are only meta() calls after the first meta -> valid (allow multiple metas at end)
         const hasAnyNonMetaAfter = chain.slice(metaIndex + 1).some((c) => c.name !== 'meta');
         if (!hasAnyNonMetaAfter) {
@@ -42,10 +53,6 @@ export const preferMetaLast = createZodPluginRule({
         }
 
         // Report the first offending `.meta(...)`
-        const metaCall = chain[metaIndex].node;
-
-        const metaCallCallee = metaCall.callee as TSESTree.MemberExpression;
-
         context.report({
           node: metaCallCallee.property,
           messageId: 'metaNotLast',

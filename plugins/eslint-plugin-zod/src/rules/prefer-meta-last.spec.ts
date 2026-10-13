@@ -96,9 +96,28 @@ ruleTester.run(preferMetaLast.name, preferMetaLast, {
         })
       `,
     },
+    {
+      name: 'a factory named meta is not the method',
+      code: dedent`
+        import { meta } from 'zod';
+        meta({ foo: "bar" }).unknownMethod();
+      `,
+    },
   ],
 
   invalid: [
+    {
+      name: 'after a property access',
+      code: dedent`
+        import * as z from 'zod';
+        z.object({ id: z.string() }).shape.id.meta({ foo: "bar" }).optional();
+      `,
+      errors: [{ messageId: 'metaNotLast' }],
+      output: dedent`
+        import * as z from 'zod';
+        z.object({ id: z.string() }).shape.id.optional().meta({ foo: "bar" });
+      `,
+    },
     {
       name: 'meta() before another method (namespace import)',
       code: dedent`

@@ -1,5 +1,5 @@
 import { zodImportScope } from '@eslint-zod/utils';
-import type { TSESTree } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import { createZodPluginRule } from '../utils/create-plugin-rule.js';
 
@@ -90,12 +90,17 @@ export const noOptionalAndDefaultTogether = createZodPluginRule<[Options], Messa
           messageId: 'noOptionalAndDefaultTogetherRemoveMethod',
           data: { method: methodToRemoveName },
           fix(fixer) {
-            // Determine which method to remove
             const nodeToRemove =
               preferredMethod === 'default' ? optionalMethod.node : defaultMethod.node;
+            const calleeToRemove = nodeToRemove.callee;
 
-            // Get the callee of the node to remove
-            const calleeToRemove = nodeToRemove.callee as TSESTree.MemberExpression;
+            // The wrapper form (`z.optional(schema)`, `optional(schema)`) has no chained call to remove.
+            if (
+              calleeToRemove.type !== AST_NODE_TYPES.MemberExpression ||
+              calleeToRemove.object.type === AST_NODE_TYPES.Identifier
+            ) {
+              return null;
+            }
 
             // Replace the entire call expression with just its object
             return fixer.replaceText(nodeToRemove, sourceCode.getText(calleeToRemove.object));

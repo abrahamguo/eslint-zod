@@ -55,9 +55,27 @@ ruleTester.run(requireBrandTypeParameter.name, requireBrandTypeParameter, {
         z.string().check(z.minLength(1), z.maxLength(10)).brand<"email">();
       `,
     },
+    {
+      name: 'a factory named brand is not the method',
+      code: dedent`
+        import { brand } from 'zod/mini'
+        brand();
+      `,
+    },
   ],
 
   invalid: [
+    suggest(
+      'after a property access',
+      dedent`
+        import * as z from 'zod/mini';
+        z.object({ id: z.string() }).shape.id.brand();
+      `,
+      dedent`
+        import * as z from 'zod/mini';
+        z.object({ id: z.string() }).shape.id;
+      `,
+    ),
     suggest(
       'namespace import',
       dedent`

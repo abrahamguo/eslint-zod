@@ -344,5 +344,71 @@ ruleTester.run(noOptionalAndDefaultTogether.name, noOptionalAndDefaultTogether, 
           z.boolean().default(true);
         `,
     },
+    {
+      name: 'optional wrapper then default - preferredMethod: default (reported without a fix)',
+      code: dedent`
+          import * as z from 'zod';
+          z.optional(z.string()).default("Hello World");
+        `,
+      options: [{ preferredMethod: 'default' }],
+      errors: [
+        {
+          messageId: 'noOptionalAndDefaultTogetherRemoveMethod',
+          data: { method: 'optional' },
+        },
+      ],
+      output: null,
+    },
+    {
+      name: 'optional wrapper then default - preferredMethod: default (named import)',
+      code: dedent`
+          import { optional, string } from 'zod';
+          optional(string()).default("Hello World");
+        `,
+      options: [{ preferredMethod: 'default' }],
+      errors: [
+        {
+          messageId: 'noOptionalAndDefaultTogetherRemoveMethod',
+          data: { method: 'optional' },
+        },
+      ],
+      output: null,
+    },
+    {
+      name: 'optional wrapper then default - preferredMethod: optional',
+      code: dedent`
+          import * as z from 'zod';
+          z.optional(z.string()).default("Hello World");
+        `,
+      options: [{ preferredMethod: 'optional' }],
+      errors: [
+        {
+          messageId: 'noOptionalAndDefaultTogetherRemoveMethod',
+          data: { method: 'default' },
+        },
+      ],
+      output: dedent`
+          import * as z from 'zod';
+          z.optional(z.string());
+        `,
+    },
+    {
+      name: 'default then optional after a property access - preferredMethod: optional',
+      code: dedent`
+          import * as z from 'zod';
+          z.object({ a: z.string() }).shape.a.default("Hello World").optional();
+        `,
+      options: [{ preferredMethod: 'optional' }],
+      errors: [
+        {
+          messageId: 'noOptionalAndDefaultTogetherRemoveMethod',
+          data: { method: 'default' },
+        },
+      ],
+      output: dedent`
+          import * as z from 'zod';
+          z.object({ a: z.string() }).shape.a.optional();
+        `,
+    },
   ],
 });

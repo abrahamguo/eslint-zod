@@ -131,5 +131,23 @@ ruleTester.run(preferMeta.name, preferMeta, {
         z.string().meta({ description: desc }).trim()
       `,
     },
+    {
+      name: 'standalone describe from a named import — reported without a fix',
+      code: dedent`
+        import { describe } from 'zod';
+        describe("desc");
+      `,
+      errors: [{ messageId: 'preferMeta' }],
+      output: null,
+    },
+    {
+      name: 'describe without an argument — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        z.string().describe();
+      `,
+      errors: [{ messageId: 'preferMeta' }],
+      output: null,
+    },
   ],
 });
