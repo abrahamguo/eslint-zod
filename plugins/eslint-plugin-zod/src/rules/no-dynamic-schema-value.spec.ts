@@ -8,6 +8,14 @@ const ruleTester = new RuleTester();
 ruleTester.run(noDynamicSchemaValue.name, noDynamicSchemaValue, {
   valid: [
     {
+      name: 'the input of a parse call is not a schema value',
+      code: dedent`
+        import * as z from 'zod';
+        z.string().parse(process.env.FOO);
+        z.string().safeParse(input);
+      `,
+    },
+    {
       name: 'not zod',
       code: 'something(getErrorMessage());',
     },

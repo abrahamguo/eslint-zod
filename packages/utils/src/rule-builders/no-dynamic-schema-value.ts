@@ -3,6 +3,7 @@ import { ASTUtils, AST_NODE_TYPES, TSESLint } from '@typescript-eslint/utils';
 
 import type { ZodImportScope } from '../zod-import-scope.js';
 import { isZodNonSchemaHelperCall } from '../zod-non-schema-helper-names.js';
+import { ZOD_NON_SCHEMA_PRODUCING_METHODS } from '../zod-non-schema-producing-methods.js';
 
 type MessageIds = 'dynamicValue';
 type Context = Readonly<TSESLint.RuleContext<MessageIds, []>>;
@@ -139,7 +140,12 @@ export function buildNoDynamicSchemaValueCreate(
         const chain = collectZodChainMethods(node);
         // Empty on a computed member (`z['string']()`) — collectZodChainMethods is all-or-nothing,
         // so fall back to the one call we know about.
-        const calls = chain.length > 0 ? chain.map((item) => item.node) : [node];
+        // `.parse(input)` and its kin end the schema: their arguments are runtime values by design.
+        const end = chain.findIndex(
+          (item, index) => index > 0 && ZOD_NON_SCHEMA_PRODUCING_METHODS.includes(item.name),
+        );
+        const schemaChain = end === -1 ? chain : chain.slice(0, end);
+        const calls = chain.length > 0 ? schemaChain.map((item) => item.node) : [node];
 
         for (const call of calls) {
           for (const argument of call.arguments) {
