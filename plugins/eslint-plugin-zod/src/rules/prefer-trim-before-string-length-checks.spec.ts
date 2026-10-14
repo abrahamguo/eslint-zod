@@ -92,6 +92,13 @@ ruleTester.run(preferTrimBeforeStringLengthChecks.name, preferTrimBeforeStringLe
           z.record(z.string().min(1).trim(), z.unknown());
         `,
     },
+    {
+      name: 'string schema as the key of a record built from named imports',
+      code: dedent`
+        import { number, record, string } from 'zod';
+        record(string().min(1).trim(), number());
+      `,
+    },
   ],
 
   invalid: [

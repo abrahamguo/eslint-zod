@@ -23,14 +23,15 @@ export const preferTrimBeforeStringLengthChecks = createZodPluginRule({
   },
   defaultOptions: [],
   create(context) {
-    const { createSchemaVisitor, collectZodChainMethods } = zodImportScope.createTracker({
-      kind: 'value',
-    });
+    const { createSchemaVisitor, collectZodChainMethods, isZodSchemaOfType } =
+      zodImportScope.createTracker({
+        kind: 'value',
+      });
 
     return createSchemaVisitor({
       schemaType: 'string',
       onSchema(node, zodSchemaMeta): void {
-        if (isRecordKeySchema(node)) {
+        if (isRecordKeySchema(node, isZodSchemaOfType)) {
           return;
         }
 

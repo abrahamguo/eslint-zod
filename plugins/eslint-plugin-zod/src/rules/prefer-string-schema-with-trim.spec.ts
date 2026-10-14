@@ -70,6 +70,14 @@ ruleTester.run(preferStringSchemaWithTrim.name, preferStringSchemaWithTrim, {
         const schema = z.record(z.string().trim(), z.unknown());
       `,
     },
+    {
+      name: 'string schema as the key of a record built from named imports',
+      code: dedent`
+        import { number, partialRecord, record, string } from 'zod';
+        record(string(), number());
+        partialRecord(string().min(1), number());
+      `,
+    },
   ],
 
   invalid: [
