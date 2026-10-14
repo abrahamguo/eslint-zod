@@ -177,5 +177,13 @@ ruleTester.run(requireBrandTypeParameter.name, requireBrandTypeParameter, {
       `,
       errors: [{ messageId: 'missingTypeParameter' }],
     },
+    {
+      name: 'comment inside the removed call — reported without the suggestion',
+      code: dedent`
+        import * as z from 'zod';
+        z.string().brand(/* keep */);
+      `,
+      errors: [{ messageId: 'missingTypeParameter' }],
+    },
   ],
 });

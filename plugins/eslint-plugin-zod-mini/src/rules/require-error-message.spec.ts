@@ -302,5 +302,14 @@ ruleTester.run(`${requireErrorMessage.name} (object)`, requireErrorMessage, {
       errors: [{ messageId: 'requireErrorMessage' }],
       output: null,
     },
+    {
+      name: 'comment inside the redundant message property — reported without a fix',
+      code: dedent`
+        import * as z from 'zod/mini';
+        z.string().check(z.refine(() => true, { error: 'hello', message: /* keep */ 'hello' }));
+      `,
+      errors: [{ messageId: 'removeMessage' }],
+      output: null,
+    },
   ],
 });

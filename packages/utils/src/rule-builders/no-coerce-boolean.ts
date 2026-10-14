@@ -1,6 +1,7 @@
 import { AST_NODE_TYPES } from '@typescript-eslint/types';
 import type { TSESLint } from '@typescript-eslint/utils';
 
+import { hasCommentInRange } from '../has-comment-in-range.js';
 import { isZodFactoryChainItem } from '../is-zod-factory-chain-item.js';
 import type { ZodImportScope } from '../zod-import-scope.js';
 
@@ -37,7 +38,9 @@ export function buildNoCoerceBooleanCreate(
 
         if (
           zodSchemaMeta.schemaDecl !== 'namespace' ||
-          factoryCallee?.object.type !== AST_NODE_TYPES.MemberExpression
+          factoryCallee?.object.type !== AST_NODE_TYPES.MemberExpression ||
+          // the suggestion rewrites the whole callee
+          hasCommentInRange(context.sourceCode, factoryCallee.range)
         ) {
           context.report({
             node,

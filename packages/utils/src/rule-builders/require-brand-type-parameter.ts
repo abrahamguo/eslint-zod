@@ -1,6 +1,7 @@
 import { AST_NODE_TYPES } from '@typescript-eslint/types';
-import type { TSESLint } from '@typescript-eslint/utils';
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 
+import { hasCommentInRange } from '../has-comment-in-range.js';
 import { hasParenthesizedReceiver } from '../has-parenthesized-receiver.js';
 import type { ZodImportScope } from '../zod-import-scope.js';
 
@@ -41,20 +42,24 @@ export function buildRequireBrandTypeParameterCreate(
           return;
         }
 
+        const removal: TSESTree.Range = [brandCalleeNode.object.range[1], brandNode.range[1]];
+
         context.report({
           messageId: 'missingTypeParameter',
           node: brandCalleeNode.property,
-          // Cutting at the receiver's end would leave a closing parenthesis behind.
-          suggest: hasParenthesizedReceiver(brandCalleeNode)
-            ? []
-            : [
-                {
-                  messageId: 'removeBrandFunction',
-                  fix(fixer): TSESLint.RuleFix {
-                    return fixer.removeRange([brandCalleeNode.object.range[1], brandNode.range[1]]);
+          // Cutting at the receiver's end would leave a closing parenthesis behind, or drop a comment.
+          suggest:
+            hasParenthesizedReceiver(brandCalleeNode) ||
+            hasCommentInRange(context.sourceCode, removal)
+              ? []
+              : [
+                  {
+                    messageId: 'removeBrandFunction',
+                    fix(fixer): TSESLint.RuleFix {
+                      return fixer.removeRange(removal);
+                    },
                   },
-                },
-              ],
+                ],
         });
       },
     });

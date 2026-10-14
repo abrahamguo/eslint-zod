@@ -136,5 +136,12 @@ ruleTester.run(noCoerceBoolean.name, noCoerceBoolean, {
         z.coerce.boolean().safeParse(input).success.toString();
       `,
     ),
+    report(
+      'comment inside the factory — reported without a suggestion',
+      dedent`
+        import * as z from 'zod/mini';
+        z.coerce /* keep */ .boolean();
+      `,
+    ),
   ],
 });

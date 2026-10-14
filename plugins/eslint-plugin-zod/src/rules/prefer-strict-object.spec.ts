@@ -133,5 +133,15 @@ ruleTester.run(preferStrictObject.name, preferStrictObject, {
       errors: [{ messageId: 'preferStrictObject' }, { messageId: 'preferStrictObject' }],
       output: null,
     },
+    {
+      name: 'comment inside the removed modifier or the renamed factory — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        z.object({ a: z.string() }).strict(/* keep */);
+        z./* keep */ object({ a: z.string() }).strict();
+      `,
+      errors: [{ messageId: 'preferStrictObject' }, { messageId: 'preferStrictObject' }],
+      output: null,
+    },
   ],
 });

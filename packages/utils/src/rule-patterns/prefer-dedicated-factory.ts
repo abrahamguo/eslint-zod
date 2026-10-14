@@ -2,6 +2,7 @@ import { AST_NODE_TYPES } from '@typescript-eslint/types';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 
 import { getStaticPropertyName } from '../get-static-property-name.js';
+import { hasCommentInRange } from '../has-comment-in-range.js';
 import { isZodFactoryChainItem } from '../is-zod-factory-chain-item.js';
 import type { ZodImportScope } from '../zod-import-scope.js';
 
@@ -57,7 +58,7 @@ function callsMethod(node: TSESTree.CallExpression, names: ReadonlyArray<string>
  * The fix renames the factory and drops the modifier;
  * it bails on named imports (would need a new import), on a modifier with arguments (nowhere to put them),
  * when an overriding method sits between the factory and the modifier,
- * and when the modifier is called after a property access.
+ * when the modifier is called after a property access, and when a comment would be dropped.
  */
 export function buildPreferDedicatedFactoryCreate<TMessageIds extends string>(
   options: PreferDedicatedFactoryOptions<TMessageIds>,
@@ -114,6 +115,18 @@ export function buildPreferDedicatedFactoryCreate<TMessageIds extends string>(
 
             const { sourceCode } = context;
 
+            const dot = sourceCode.getTokenBefore(modifierCallee.property);
+            const removal: TSESTree.Range | null =
+              dot?.value === '.' ? [dot.range[0], modifierMethod.node.range[1]] : null;
+
+            // Only the factory's namespace and what precedes the modifier's dot are kept.
+            if (
+              hasCommentInRange(sourceCode, factoryCallee.range) ||
+              (removal && hasCommentInRange(sourceCode, removal))
+            ) {
+              return null;
+            }
+
             const fixes = [
               fixer.replaceText(
                 factoryCallee,
@@ -121,10 +134,8 @@ export function buildPreferDedicatedFactoryCreate<TMessageIds extends string>(
               ),
             ];
 
-            const tokenBefore = sourceCode.getTokenBefore(modifierCallee.property);
-
-            if (tokenBefore?.value === '.') {
-              fixes.push(fixer.removeRange([tokenBefore.range[0], modifierMethod.node.range[1]]));
+            if (removal) {
+              fixes.push(fixer.removeRange(removal));
             }
 
             return fixes;

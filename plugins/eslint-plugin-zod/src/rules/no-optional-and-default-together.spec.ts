@@ -418,5 +418,17 @@ ruleTester.run(noOptionalAndDefaultTogether.name, noOptionalAndDefaultTogether, 
           z.object({ a: z.string() }).shape.a.optional();
         `,
     },
+    {
+      name: 'comment inside the removed method — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        z.string() /* keep */ .optional().default('a');
+      `,
+      options: [{ preferredMethod: 'default' }],
+      errors: [
+        { messageId: 'noOptionalAndDefaultTogetherRemoveMethod', data: { method: 'optional' } },
+      ],
+      output: null,
+    },
   ],
 });

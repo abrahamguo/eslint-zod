@@ -194,5 +194,15 @@ ruleTester.run(preferLooseObject.name, preferLooseObject, {
       errors: [{ messageId: 'preferLooseObject' }, { messageId: 'preferLooseObject' }],
       output: null,
     },
+    {
+      name: 'comment inside the removed modifier or the renamed factory — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        z.object({ a: z.string() }).loose(/* keep */);
+        z./* keep */ object({ a: z.string() }).loose();
+      `,
+      errors: [{ messageId: 'preferLooseObject' }, { messageId: 'preferLooseObject' }],
+      output: null,
+    },
   ],
 });

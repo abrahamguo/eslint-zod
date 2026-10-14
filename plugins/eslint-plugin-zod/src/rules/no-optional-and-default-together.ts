@@ -1,4 +1,4 @@
-import { ZOD_TYPE_CHANGING_METHODS, zodImportScope } from '@eslint-zod/utils';
+import { ZOD_TYPE_CHANGING_METHODS, hasCommentInRange, zodImportScope } from '@eslint-zod/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/types';
 
 import { createZodPluginRule } from '../utils/create-plugin-rule.js';
@@ -114,6 +114,13 @@ export const noOptionalAndDefaultTogether = createZodPluginRule<[Options], Messa
             if (
               calleeToRemove.type !== AST_NODE_TYPES.MemberExpression ||
               calleeToRemove.object.type === AST_NODE_TYPES.Identifier
+            ) {
+              return null;
+            }
+
+            // Only the receiver's text is kept.
+            if (
+              hasCommentInRange(sourceCode, [calleeToRemove.object.range[1], nodeToRemove.range[1]])
             ) {
               return null;
             }

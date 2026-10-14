@@ -2,6 +2,7 @@ import { AST_NODE_TYPES } from '@typescript-eslint/types';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 
 import { getStaticPropertyName } from '../get-static-property-name.js';
+import { hasCommentInRange } from '../has-comment-in-range.js';
 import type { ZodImportScope } from '../zod-import-scope.js';
 
 type MessageIds = 'requireErrorMessage' | 'preferError' | 'removeMessage';
@@ -82,7 +83,8 @@ export function buildRequireErrorMessageCreate(
                   end = nextToken.range[1];
                 }
 
-                return fixer.removeRange([messagePropertyNode.range[0], end]);
+                const removal: TSESTree.Range = [messagePropertyNode.range[0], end];
+                return hasCommentInRange(sourceCode, removal) ? null : fixer.removeRange(removal);
               },
             });
             continue;
