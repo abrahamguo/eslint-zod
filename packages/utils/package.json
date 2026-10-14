@@ -33,6 +33,11 @@
       "types": "./dist/index.d.mts",
       "default": "./dist/index.mjs"
     },
+    "./rule-types": {
+      "@eslint-zod/source": "./src/rule-types.ts",
+      "types": "./dist/rule-types.d.mts",
+      "default": "./dist/rule-types.mjs"
+    },
     "./rule-builders/*": {
       "@eslint-zod/source": "./src/rule-builders/*.ts",
       "types": "./dist/rule-builders/*.d.mts",
@@ -54,9 +59,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@typescript-eslint/scope-manager": "catalog:deps",
     "@typescript-eslint/types": "catalog:deps",
-    "@typescript-eslint/utils": "catalog:deps",
     "esquery": "^1.6.0"
   },
   "devDependencies": {

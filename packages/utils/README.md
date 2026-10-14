@@ -34,6 +34,11 @@ Every export carries JSDoc with usage notes — refer to the linked source files
 
 AST parsing, import tracking, traversal, and fixer helpers.
 
+**Rule authoring**
+
+- `createRuleCreator(getRuleURL)` — builds a rule factory; each rule gets its docs URL, and `create` receives the user's options merged over `defaultOptions`. Types `RuleCreator` (the factory) and `RuleDefinition` (what it takes); the types they are written against live in [`@eslint-zod/utils/rule-types`](#rule-types--eslint-zodutilsrule-types)
+- `createPluginMeta(packageJSONURL)` — a plugin's `name`, `version`, `getRuleURL` and `createRule`, read from its `package.json`; rule docs are expected at `docs/rules/<rule-name>.md` under `repository.directory`. Type `PluginMeta`
+
 **Import tracking & scopes**
 
 - `ZodImportScope` — the class defining which import sources a plugin considers in-scope; `scope.createTracker({ kind })` is how rules get a per-file import tracker; `kind` is required, and `sourceCode` enables the scope-aware resolvers below
@@ -79,6 +84,15 @@ Canonical names shared by both API styles, so rule logic compares `zod`'s `.min(
 - `canonicalizeZodConstraintName(constraint, baseType)` — reduce a constraint's spelling to its canonical name
 - `getZodCheckDescriptor(canonicalName)` — what a check means: which base types accept it and what it bounds
 - types `ZodCheckDescriptor`, `ZodCheckBound`, `ZodCheckDomain`
+
+### Rule types — `@eslint-zod/utils/rule-types`
+
+The slice of the linter's rule API the helpers read. The types are structural, so ESLint's and typescript-eslint's own objects are assignable to them and no linter has to be installed: the package's only typescript-eslint dependency is `@typescript-eslint/types`, for the AST.
+
+- `RuleContext`, `RuleListener`, `RuleModule`, `RuleMeta` — the rule itself
+- `JSONSchema4` — the type of `meta.schema`, vendored from typescript-eslint so its `RuleTester` accepts the rule modules
+- `RuleFix`, `RuleFixer`, `ReportDescriptor`, `ReportFixFunction`, `ReportSuggestionArray`, `SuggestionReportDescriptor` — reports and fixes
+- `SourceCode`, `TokenSearchOptions`, `Scope`, `ScopeVariable`, `ScopeDefinition`, `ScopeReference` — source and scope access
 
 ### Shared rule builders — `@eslint-zod/utils/rule-builders/<rule-name>`
 

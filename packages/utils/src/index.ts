@@ -1,3 +1,7 @@
+// rule authoring
+export { createPluginMeta, createRuleCreator } from './create-rule-creator.js';
+export type { PluginMeta, RuleCreator, RuleDefinition } from './create-rule-creator.js';
+
 // import tracking & scopes
 export type {
   ZodChainItem,

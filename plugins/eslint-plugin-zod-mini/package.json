@@ -47,8 +47,7 @@
   },
   "dependencies": {
     "@eslint-zod/utils": "workspace:*",
-    "@typescript-eslint/types": "catalog:deps",
-    "@typescript-eslint/utils": "catalog:deps"
+    "@typescript-eslint/types": "catalog:deps"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:dev",

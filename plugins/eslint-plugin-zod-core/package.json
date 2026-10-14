@@ -46,8 +46,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@eslint-zod/utils": "workspace:*",
-    "@typescript-eslint/utils": "catalog:deps"
+    "@eslint-zod/utils": "workspace:*"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:dev",
