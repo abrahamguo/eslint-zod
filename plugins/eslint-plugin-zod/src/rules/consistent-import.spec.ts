@@ -1,9 +1,15 @@
 import { RuleTester } from '@typescript-eslint/rule-tester';
 import dedent from 'dedent';
+import type { Rule as ESLintRule } from 'eslint';
+import { RuleTester as ESLintRuleTester } from 'eslint';
 
 import { consistentImport } from './consistent-import.js';
 
 const ruleTester = new RuleTester();
+
+// @typescript-eslint/rule-tester wraps the parser to produce a TypeScript AST.
+// Use the ESLint tester to catch plain JS parser issues.
+const jsRuleTester = new ESLintRuleTester();
 
 ruleTester.run(`${consistentImport.name} namespace`, consistentImport, {
   valid: [
@@ -477,3 +483,26 @@ ruleTester.run(`${consistentImport.name} named`, consistentImport, {
     },
   ],
 });
+
+jsRuleTester.run(
+  `${consistentImport.name} plain JS`,
+  consistentImport as unknown as ESLintRule.RuleModule,
+  {
+    valid: [
+      {
+        // https://github.com/marcalexiei/eslint-zod/issues/501
+        name: 'valid usage',
+        code: 'import * as z from "zod";',
+      },
+    ],
+    invalid: [
+      {
+        // https://github.com/marcalexiei/eslint-zod/issues/501
+        name: 'named import',
+        code: 'import {z} from "zod";',
+        errors: [{ messageId: 'changeImportSyntax', data: { syntax: 'namespace' } }],
+        output: 'import * as z from "zod";',
+      },
+    ],
+  },
+);

@@ -40,7 +40,11 @@ export function buildConsistentImportCreate(
           nodes: [],
         };
 
-        if (importGroups[source.value].hasOnlyTypeImports && importKind === 'value') {
+        /**
+         * `importKind` is not set by espree
+         * @see https://github.com/marcalexiei/eslint-zod/issues/501
+         */
+        if (importGroups[source.value].hasOnlyTypeImports && importKind !== 'type') {
           importGroups[source.value].hasOnlyTypeImports = false;
         }
 
