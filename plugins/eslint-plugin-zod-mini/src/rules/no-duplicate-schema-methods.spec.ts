@@ -36,20 +36,6 @@ ruleTester.run(noDuplicateSchemaMethods.name, noDuplicateSchemaMethods, {
       `,
     },
     {
-      name: 'namespace - or called multiple times (excluded)',
-      code: dedent`
-        import * as z from 'zod/mini';
-        z.string().or(z.number()).or(z.boolean());
-      `,
-    },
-    {
-      name: 'namespace - and called multiple times (excluded)',
-      code: dedent`
-        import * as z from 'zod/mini';
-        z.object({ a: z.string() }).and(z.object({ b: z.number() })).and(z.object({ c: z.boolean() }));
-      `,
-    },
-    {
       name: 'namespace - register called multiple times (excluded)',
       code: dedent`
         import * as z from 'zod/mini';

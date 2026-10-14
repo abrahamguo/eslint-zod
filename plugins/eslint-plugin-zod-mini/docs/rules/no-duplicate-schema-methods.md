@@ -10,7 +10,7 @@
 
 This rule disallows calling the same Zod Mini schema method more than once within a single method chain. Duplicate calls are almost always a mistake — they indicate redundant or conflicting configuration.
 
-Methods that are designed to be chained multiple times, such as `.check()` (and its alias `.with()`), `.or()`, and `.and()`, are excluded from this check.
+Methods that are designed to be chained multiple times, such as `.check()` (and its alias `.with()`) and `.register()`, are excluded from this check.
 
 ## Examples
 
@@ -32,9 +32,6 @@ const aSchema = z.string().brand('MyBrand');
 
 // .check() is excluded — chaining multiple .check() calls is intentional in zod/mini
 const bSchema = z.string().check(z.minLength(1)).check(z.maxLength(10));
-
-// .or() and .and() are excluded — chaining them is intentional
-const cSchema = z.string().or(z.number()).or(z.boolean());
 ```
 
 ## When Not To Use It

@@ -7,16 +7,15 @@ import { createZodMiniPluginRule } from '../utils/create-plugin-rule.js';
  * Methods excluded from duplicate-call detection because they are intentionally
  * called more than once in a single schema chain in the `zod/mini` API.
  *
- * - `and` / `or` — each call adds an intersection / union branch
  * - `check` / `with` — each call registers additional `$ZodCheck` validators (primary
  *   composition mechanism in `zod/mini`; deliberately chainable)
  * - `register` — each call registers the schema in a different registry
  *
- * Note: `refine`, `superRefine`, `transform`, and `pipe` are standalone
+ * Note: `refine`, `superRefine`, `transform`, `pipe`, `union` and `intersection` are standalone
  * functions in `zod/mini`, not chain methods, so they never appear as
  * duplicates in a method chain.
  */
-const EXCLUDED_METHODS = ['and', 'check', 'or', 'register', 'with'] as const;
+const EXCLUDED_METHODS = ['check', 'register', 'with'] as const;
 
 export const noDuplicateSchemaMethods = createZodMiniPluginRule({
   name: 'no-duplicate-schema-methods',
