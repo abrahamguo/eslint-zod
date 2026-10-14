@@ -111,6 +111,15 @@ ruleTester.run(preferMetaLast.name, preferMetaLast, {
         meta().min(1);
       `,
     },
+    {
+      name: 'meta before a method that does not return a schema',
+      code: dedent`
+        import * as z from 'zod';
+        z.string().meta({ title: 'Name' }).toJSONSchema();
+        z.string().meta({ title: 'Name' }).isOptional();
+        z.string().meta({ title: 'Name' }).apply((schema) => schema.parse('a'));
+      `,
+    },
   ],
 
   invalid: [

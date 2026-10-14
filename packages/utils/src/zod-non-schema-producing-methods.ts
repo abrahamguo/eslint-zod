@@ -24,6 +24,12 @@ export const ZOD_NON_SCHEMA_PRODUCING_METHODS = Object.freeze([
   'validate',
   'validateAsync',
 
+  // introspection and escape hatches — a JSON schema, a boolean, whatever the callback returns
+  'toJSONSchema',
+  'isOptional',
+  'isNullable',
+  'apply',
+
   // codec
   'codec',
 

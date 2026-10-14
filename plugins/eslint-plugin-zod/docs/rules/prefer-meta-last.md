@@ -57,7 +57,7 @@ z.string().min(5).max(10);
 
 The fix moves every misplaced `.meta()` after the last other schema method, keeping their order,
 so a later `.meta()` still overrides an earlier one.
-A parse call (`.parse()`, `.safeParse()`, …) ends the schema, so `.meta()` is moved before it.
+A call that does not return a schema (`.parse()`, `.safeParse()`, `.toJSONSchema()`, …) ends it, so `.meta()` is moved before that call.
 
 Moving `.meta()` past a method that wraps the schema (`.optional()`, `.array()`, `.transform()`) attaches the metadata to the wrapper instead of the inner schema.
 

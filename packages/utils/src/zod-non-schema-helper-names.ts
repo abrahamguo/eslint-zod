@@ -15,7 +15,7 @@ export const ZOD_NON_SCHEMA_HELPER_NAMES = Object.freeze([
   'globalRegistry',
   'locales',
   'registry',
-  'toJSONSchema',
+  // `toJSONSchema` and the parse helpers come with the method list
   ...ZOD_NON_SCHEMA_PRODUCING_METHODS.filter((name) => !isZodSchemaFactoryName(name)),
 ]);
 
