@@ -3,11 +3,13 @@ import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 
 import { buildZodConstraintsRemoveFix } from '../build-zod-constraints-remove-fix.js';
 import type { ZodSchemaConstraint } from '../collect-zod-schema-constraints.js';
+import { hasOpaqueZodCheck } from '../has-opaque-zod-check.js';
 import { isZodFactoryChainItem } from '../is-zod-factory-chain-item.js';
 import { readIntegerLiteralValue } from '../read-integer-literal-value.js';
 import { readsZodSchemaProperty } from '../reads-zod-schema-property.js';
 import { canonicalizeZodConstraintName } from '../zod-check-vocabulary.js';
 import type { ZodImportScope } from '../zod-import-scope.js';
+import { ZOD_MUTATING_CHECK_NAMES } from '../zod-mutating-check-names.js';
 import { ZOD_TYPE_CHANGING_METHODS } from '../zod-type-changing-methods.js';
 
 /** The fix repeats the element schema once per item, so a large count is left to the author. */
@@ -163,6 +165,23 @@ export function buildPreferTupleOverArrayLengthCreate(
 
             // A second argument is a custom error, which a tuple has no place for.
             if (removable.some((it) => it.node.arguments.length > 1)) {
+              return null;
+            }
+
+            // The tuple checks its length first: a check that rewrites the array before the bound
+            // (`.overwrite(dedupe).min(2)`) would then run after it.
+            const lastRemovable = Math.max(...removable.map((it) => constraints.indexOf(it)));
+            if (
+              constraints
+                .slice(0, lastRemovable)
+                .some((it) => ZOD_MUTATING_CHECK_NAMES.includes(it.name)) ||
+              hasOpaqueZodCheck({
+                methods,
+                constraints,
+                fromChainIndex: 1,
+                toChainIndex: Math.max(...removable.map((it) => it.chainIndex)),
+              })
+            ) {
               return null;
             }
 

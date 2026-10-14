@@ -6,6 +6,7 @@ import type { ZodSchemaConstraint } from '../collect-zod-schema-constraints.js';
 import type { ZodSchemaBaseType } from '../get-zod-schema-base-type.js';
 import { getZodSchemaBaseType } from '../get-zod-schema-base-type.js';
 import { hasCommentInRange } from '../has-comment-in-range.js';
+import { hasOpaqueZodCheck } from '../has-opaque-zod-check.js';
 import { isZodFactoryChainItem } from '../is-zod-factory-chain-item.js';
 import { readIntegerLiteralValue } from '../read-integer-literal-value.js';
 import type { ZodCheckDomain } from '../zod-check-vocabulary.js';
@@ -227,16 +228,15 @@ export function buildCollapseEqualBoundsCreate<TMessageIds extends string>(
           return;
         }
 
-        // A `.check(...)` argument that is not a zod call (`trimIt`, a spread) may mutate too.
-        const hasOpaqueCheck = collectZodChainMethods(node).some(
-          (method, chainIndex) =>
-            (method.name === 'check' || method.name === 'with') &&
-            chainIndex >= firstBound.constraint.chainIndex &&
-            chainIndex <= secondBound.constraint.chainIndex &&
-            method.node.arguments.length !==
-              constraints.filter((it) => it.chainIndex === chainIndex).length,
-        );
-        if (hasOpaqueCheck) {
+        // A callback, or a `.check(...)` argument that is not a zod call, may mutate too.
+        if (
+          hasOpaqueZodCheck({
+            methods: collectZodChainMethods(node),
+            constraints,
+            fromChainIndex: firstBound.constraint.chainIndex,
+            toChainIndex: secondBound.constraint.chainIndex,
+          })
+        ) {
           return;
         }
 

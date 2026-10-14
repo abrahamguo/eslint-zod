@@ -289,5 +289,14 @@ ruleTester.run(preferTupleOverArrayLength.name, preferTupleOverArrayLength, {
       errors: [{ messageId: 'preferTuple' }],
       output: null,
     },
+    {
+      name: 'length bound after a check that rewrites the array — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        z.array(z.string()).overwrite((items) => [...new Set(items)]).min(2);
+      `,
+      errors: [{ messageId: 'preferTuple' }],
+      output: null,
+    },
   ],
 });

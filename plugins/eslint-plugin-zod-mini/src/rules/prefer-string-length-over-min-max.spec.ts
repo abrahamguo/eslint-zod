@@ -93,6 +93,19 @@ ruleTester.run(preferStringLengthOverMinMax.name, preferStringLengthOverMinMax, 
         string().check(minLength(3), maxLength(3))
       `,
     },
+    {
+      name: 'callback check between the two bounds may rewrite the value',
+      code: dedent`
+        import * as z from 'zod/mini';
+        z.string().check(
+          z.minLength(6),
+          z.check((ctx) => {
+            ctx.value = ctx.value.trim();
+          }),
+          z.maxLength(6),
+        );
+      `,
+    },
   ],
   invalid: [
     {

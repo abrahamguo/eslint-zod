@@ -98,6 +98,7 @@ Autofix is also **not applied** when:
 - The `z.array()` call does not have exactly one element-schema argument
 - The length check carries a custom error (e.g. `z.array(x).length(2, 'two')`), which a tuple has no place for
 - The count is above 10 (e.g. `z.array(x).length(11)`), since the fix repeats the element schema once per item
+- A check that rewrites the array comes before the length check (e.g. `.overwrite(fn).min(2)`), since the tuple would check the length first
 
 In these cases the rule still reports but leaves the code unchanged.
 
