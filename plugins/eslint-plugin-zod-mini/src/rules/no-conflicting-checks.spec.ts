@@ -237,6 +237,22 @@ ruleTester.run(noConflictingChecks.name, noConflictingChecks, {
         z.array(z.string()).def.element.check(z.trim()).check(z.email());
       `,
     },
+    {
+      name: 'checks on either side of a callback that may rewrite the value',
+      code: dedent`
+        import * as z from 'zod/mini';
+        z.number().check(z.gte(5), z.check((ctx) => { ctx.value = 1; }), z.lte(3));
+        z.number().check(z.gte(5), (ctx) => { ctx.value = 1; }, z.lte(3));
+      `,
+    },
+    {
+      name: 'literal checked after a mutating check is no longer the literal',
+      code: dedent`
+        import * as z from 'zod/mini';
+        z.literal(' abc ').check(z.trim(), z.maxLength(3));
+        z.literal('ABC').check(z.toLowerCase(), z.lowercase());
+      `,
+    },
   ],
   invalid: [
     {

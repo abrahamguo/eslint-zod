@@ -100,7 +100,7 @@ Deliberately out of scope (too complex for a linter):
 - Number-theory reasoning — `z.int()` combined with a range containing no integer, `z.multipleOf(k)` with a range containing no multiple
 - `z.regex()` compatibility with other checks; two `z.regex()` calls are compared by their argument source text only, so `z.regex(ASCII), z.regex(/^[ -~]*$/)` is not reported
 - Format checks evaluated against `z.literal()` values
-- Checks on either side of a mutating check (`z.minLength(3), z.trim(), z.minLength(1)`): they see different values, so they are not compared.
+- Checks on either side of a mutating check (`z.minLength(3), z.trim(), z.minLength(1)`) or of a callback check: they see different values, so they are not compared.
   The exception is a string's `z.minLength()` above its `z.maxLength()` (`z.minLength(5), z.trim(), z.maxLength(3)`), which zod rejects when the schema is built
 
 ## When Not To Use It

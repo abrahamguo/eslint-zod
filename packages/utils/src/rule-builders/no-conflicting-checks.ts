@@ -11,6 +11,9 @@ import type { ZodImportScope } from '../zod-import-scope.js';
 import { ZOD_MUTATING_CHECK_NAMES } from '../zod-mutating-check-names.js';
 import { ZOD_TYPE_CHANGING_METHODS } from '../zod-type-changing-methods.js';
 
+/** Checks whose callback may rewrite the value. */
+const CALLBACK_CHECK_NAMES: ReadonlyArray<string> = ['check', 'superRefine'];
+
 /** Options contract implemented by each plugin's rule. */
 export interface NoConflictingChecksOptions {
   /** Provably unsatisfiable combinations — the schema can never match. */
@@ -666,9 +669,31 @@ export function buildNoConflictingChecksCreate(
           });
         }
 
-        for (const [index, constraint] of collectZodSchemaConstraints(node).entries()) {
-          if (ZOD_MUTATING_CHECK_NAMES.includes(constraint.name)) {
+        const constraints = collectZodSchemaConstraints(node);
+        // A `.check(...)` with an argument that is not a zod call (a callback, `trimIt`) may mutate too.
+        const opaqueChainIndexes = chain.flatMap((item, chainIndex) =>
+          (item.name === 'check' || item.name === 'with') &&
+          item.node.arguments.length !==
+            constraints.filter((it) => it.chainIndex === chainIndex).length
+            ? [chainIndex]
+            : [],
+        );
+        for (const [index, constraint] of constraints.entries()) {
+          const { chainIndex } = constraint;
+          // the call a constraint sits in, or one passed since the previous constraint
+          const after = index === 0 ? 0 : constraints[index - 1].chainIndex;
+          const crossesOpaqueCheck = opaqueChainIndexes.some(
+            (opaque) => opaque === chainIndex || (opaque > after && opaque < chainIndex),
+          );
+
+          if (
+            crossesOpaqueCheck ||
+            ZOD_MUTATING_CHECK_NAMES.includes(constraint.name) ||
+            CALLBACK_CHECK_NAMES.includes(constraint.name)
+          ) {
             segmentStarts.push(checks.length);
+          }
+          if (ZOD_MUTATING_CHECK_NAMES.includes(constraint.name)) {
             continue;
           }
 
@@ -698,7 +723,8 @@ export function buildNoConflictingChecksCreate(
         }
 
         if (baseType === 'literal') {
-          analyzeLiteral(chain, checks);
+          // Past a mutating check the value is no longer the literal.
+          analyzeLiteral(chain, checks.slice(0, segmentStarts.at(1)));
           return;
         }
 

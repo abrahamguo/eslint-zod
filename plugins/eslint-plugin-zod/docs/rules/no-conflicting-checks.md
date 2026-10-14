@@ -98,7 +98,7 @@ Deliberately out of scope (too complex for a linter):
 - Number-theory reasoning — `int()` combined with a range containing no integer (`gt(0).lt(1)`), `multipleOf(k)` with a range containing no multiple
 - `regex()` compatibility with other checks; two `regex()` calls are compared by their argument source text only, so `regex(ASCII).regex(/^[ -~]*$/)` is not reported
 - Format checks evaluated against `z.literal()` values
-- Checks on either side of a mutating check (`.min(3).trim().min(1)`): they see different values, so they are not compared.
+- Checks on either side of a mutating check (`.min(3).trim().min(1)`) or of a `.check()` callback: they see different values, so they are not compared.
   The exception is a string's `.min()` above its `.max()` (`.min(5).trim().max(3)`), which zod rejects when the schema is built
 
 ## Overlap with `no-duplicate-schema-methods`

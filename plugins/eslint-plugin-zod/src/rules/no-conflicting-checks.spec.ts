@@ -200,6 +200,13 @@ ruleTester.run(noConflictingChecks.name, noConflictingChecks, {
         z.string().describe('a description');
       `,
     },
+    {
+      name: 'checks on either side of a callback that may rewrite the value',
+      code: dedent`
+        import * as z from 'zod';
+        z.number().min(5).check((ctx) => { ctx.value = 1; }).max(3);
+      `,
+    },
   ],
   invalid: [
     {
