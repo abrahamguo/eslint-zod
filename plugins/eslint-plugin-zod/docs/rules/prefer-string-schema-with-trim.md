@@ -8,6 +8,8 @@
 
 <!-- end auto-generated rule header -->
 
+## Rule Details
+
 When defining string schemas,
 it is very common to require the string not to have leading or trailing whitespaces.
 
@@ -16,11 +18,14 @@ Failing to trim strings from user inputs or other boundaries might lead to issue
 
 This rule enforces adding `.trim()` to any `z.string()` schema to improve robustness.
 
-## Rule Details
-
 This rule reports an error when `z.string()` lacks `.trim()`.
 
 It includes an auto-fixer, which adds a `.trim()` after the schema type declaration.
+
+A string used as the key of `z.record()`, `z.partialRecord()` or `z.looseRecord()` is left alone:
+trimming a record key can make two keys collide (see [`no-transform-in-record-key`](./no-transform-in-record-key.md)).
+
+## Examples
 
 ### ❌ Invalid
 

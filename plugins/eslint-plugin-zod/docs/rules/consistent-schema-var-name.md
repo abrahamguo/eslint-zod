@@ -48,25 +48,6 @@ When `before` ends in a letter, the suggested name capitalizes the original one 
 The default `after` still applies when only `before` is set, giving `zUserSchema`.
 Any other prefix is prepended as is (`$user`).
 
-## Why is there no autofix or suggestion?
-
-**TL;DR:** Use your IDE's rename functionality, it's far more robust and already battle-tested.
-Adding a custom autofix here would essentially reinvent the wheel.
-
----
-
-Renaming variables safely is surprisingly complex.
-An ESLint rule cannot reliably handle all the cases involved, including:
-
-- handling linked `import` / `export` statements
-- avoiding naming conflicts within the same scope
-- preventing accidental shadowing of variables in inner or outer scopes
-- applying changes across multiple files (e.g., when the variable is exported)
-
-Because of these limitations, this rule only reports an error and does not provide an automated fix.
-To resolve the issue, rely on your IDE's rename tools.
-They're designed to manage all of the above scenarios correctly.
-
 ## Examples
 
 ### Default (suffix only)
@@ -175,6 +156,25 @@ const user = z.string();
 ```ts
 const user_schema = z.string();
 ```
+
+## Why is there no autofix or suggestion?
+
+**TL;DR:** Use your IDE's rename functionality, it's far more robust and already battle-tested.
+Adding a custom autofix here would essentially reinvent the wheel.
+
+---
+
+Renaming variables safely is surprisingly complex.
+An ESLint rule cannot reliably handle all the cases involved, including:
+
+- handling linked `import` / `export` statements
+- avoiding naming conflicts within the same scope
+- preventing accidental shadowing of variables in inner or outer scopes
+- applying changes across multiple files (e.g., when the variable is exported)
+
+Because of these limitations, this rule only reports an error and does not provide an automated fix.
+To resolve the issue, rely on your IDE's rename tools.
+They're designed to manage all of the above scenarios correctly.
 
 ## When Not To Use It
 

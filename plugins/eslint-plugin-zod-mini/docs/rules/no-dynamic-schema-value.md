@@ -20,6 +20,7 @@ rewritten as.
 
 Only schema expressions are checked. The helpers that do something else with a schema —
 `z.toJSONSchema()`, `z.parse()`, `z.prettifyError()`, `z.config()` — take runtime values by design.
+So do the methods that end a schema chain, such as `.parse(input)`: their arguments are not checked.
 
 ## Why?
 

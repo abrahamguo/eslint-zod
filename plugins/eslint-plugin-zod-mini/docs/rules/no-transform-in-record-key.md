@@ -9,8 +9,10 @@
 ## Rule Details
 
 This ESLint rule detects mutating checks in `z.record()` key schemas and prevents them.
+The keys of `z.partialRecord()` and `z.looseRecord()` are checked the same way.
 
 In Zod Mini, transforms are standalone `$ZodCheck` functions passed into `.check()`. Using mutating checks like `z.trim()`, `z.toLowerCase()`, `z.toUpperCase()`, `z.normalize()`, or `z.overwrite()` on the key schema in `z.record()` causes silent key mutation and data loss through key collisions.
+So does a `z.transform()` used as the key, directly or inside `z.pipe()`.
 
 ### The Problem
 

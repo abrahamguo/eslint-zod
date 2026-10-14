@@ -13,6 +13,9 @@
 This rule reports when both `.optional()` and `.default()` are used on the same Zod schema.
 Since having a default value implicitly makes a schema optional, using both methods is redundant.
 
+The two are only paired on the same schema:
+in `z.string().optional().array().default([])` the `.array()` between them makes it a different one, so nothing is reported.
+
 ## Options
 
 <!-- begin auto-generated rule options list -->

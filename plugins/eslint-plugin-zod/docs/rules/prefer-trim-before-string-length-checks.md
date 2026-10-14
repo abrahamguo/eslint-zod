@@ -8,6 +8,8 @@
 
 <!-- end auto-generated rule header -->
 
+## Rule Details
+
 When using `.trim()` with length constraints like `.min()`, `.max()`, `.length()`, or `.nonempty()`, the order matters.
 
 - `z.string().trim().min(1)` — trims first, then checks length → a string of spaces **fails** validation (correct behavior)
@@ -15,11 +17,14 @@ When using `.trim()` with length constraints like `.min()`, `.max()`, `.length()
 
 This rule enforces that `.trim()` always appears before any length checks to ensure the length is measured on the trimmed value.
 
-## Rule Details
-
 This rule reports an error when `.trim()` appears after `.min()`, `.max()`, `.length()`, or `.nonempty()` in a `z.string()` chain.
 
 It includes an auto-fixer that moves `.trim()` to immediately after `z.string()`.
+
+A string used as the key of `z.record()`, `z.partialRecord()` or `z.looseRecord()` is left alone:
+trimming a record key can make two keys collide (see [`no-transform-in-record-key`](./no-transform-in-record-key.md)).
+
+## Examples
 
 ### ❌ Invalid
 

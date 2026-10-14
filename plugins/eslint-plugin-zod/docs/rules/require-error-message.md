@@ -72,7 +72,7 @@ z.string()
   .trim();
 ```
 
-## Auto-fixes
+## Autofix Behavior
 
 This rule can automatically fix two types of issues:
 

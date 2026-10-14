@@ -9,6 +9,7 @@
 ## Rule Details
 
 This ESLint rule detects **transforms in `z.record()` key schemas** and prevents them.
+The keys of `z.partialRecord()` and `z.looseRecord()` are checked the same way.
 
 Using transforms (like `.trim()`, `.normalize()`, `.toLowerCase()`, `.toUpperCase()`, `.overwrite()`, `.slugify()`, or `.transform()`) on the key schema in `z.record()` causes silent key mutation and data loss through key collisions.
 

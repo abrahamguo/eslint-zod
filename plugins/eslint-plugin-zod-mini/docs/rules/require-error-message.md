@@ -78,7 +78,7 @@ z.string()
   .check(z.refine(() => true, { error: 'error msg 2' }));
 ```
 
-## Auto-fixes
+## Autofix Behavior
 
 This rule can automatically fix two types of issues:
 
