@@ -1,5 +1,5 @@
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { TSESTree } from '@typescript-eslint/utils';
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 import { describe, expect, it } from 'vitest';
 
 import type { ZodSchemaMeta } from './detect-zod-schema-root-node.js';
@@ -317,8 +317,14 @@ describe('findZodChainedMethod', () => {
 
   it('does not mistake an aliased factory for the method: import { number as finite }; finite().min(0)', () => {
     const tracker = zodImportScope.createTracker({ kind: 'value' });
+    tracker.importDeclarationListener(mockImportDecl('zod', [mockNamedSpec('finite', 'number')]));
     const minCall = makeCall(makeME(makeCall(makeIdent('finite')), 'min'));
 
+    // the head carries the export name, so it cannot match by its local alias
+    expect(tracker.collectZodChainMethods(minCall).map((item) => item.name)).toStrictEqual([
+      'number',
+      'min',
+    ]);
     expect(tracker.findZodChainedMethod(minCall, meta('named', ['min']), 'finite')).toBeNull();
   });
 
@@ -534,5 +540,31 @@ describe('resolveZodImport', () => {
     const tracker = zodImportScope.createTracker({ kind: 'value' });
     expect(tracker.resolveZodImport(makeCall(makeIdent('z')))).toBeNull();
     expect(tracker.resolveZodExport(makeCall(makeIdent('z')))).toBeNull();
+  });
+
+  /** A tracker whose scope resolves `z` to the given definitions, the first being the zod import. */
+  function trackerWithDefinitions(extraDefinitions: number): {
+    resolve: () => unknown;
+    specifier: TSESTree.ImportNamespaceSpecifier;
+  } {
+    const specifier = mockNamespaceSpec('z');
+    const importDefinition = { type: 'ImportBinding', node: specifier };
+    const defs = [importDefinition, ...Array.from({ length: extraDefinitions }, () => ({}))];
+    const sourceCode = {
+      getScope: () => ({ set: new Map([['z', { defs }]]), upper: null }),
+    } as unknown as TSESLint.SourceCode;
+    const tracker = zodImportScope.createTracker({ kind: 'value', sourceCode });
+    tracker.importDeclarationListener(mockImportDecl('zod', [specifier]));
+    return { resolve: () => tracker.resolveZodImport(makeIdent('z')), specifier };
+  }
+
+  it('resolves an identifier bound once, by a zod import', () => {
+    const { resolve, specifier } = trackerWithDefinitions(0);
+    expect(resolve()).toMatchObject({ name: '*', local: specifier.local });
+  });
+
+  it('returns null when the binding is declared again', () => {
+    const { resolve } = trackerWithDefinitions(1);
+    expect(resolve()).toBeNull();
   });
 });

@@ -43,6 +43,31 @@ describe('buildZodChainRemoveMethodFix', () => {
     expect(buildZodChainRemoveMethodFix({ fixer, methods, removeIndex: 1 })).toBeNull();
   });
 
+  it('returns null when a comment sits in the removed text: z.number() /* c */ .finite()', () => {
+    const { fixer, calls } = makeFixer();
+    const methods = [
+      { name: 'number', node: makeNodeWithRange(0, 10) },
+      { name: 'finite', node: makeNodeWithRange(0, 28) },
+    ];
+    const sourceCode = { getAllComments: () => [{ range: [11, 18] }] } as never;
+
+    expect(buildZodChainRemoveMethodFix({ fixer, methods, removeIndex: 1, sourceCode })).toBeNull();
+    expect(calls.removeRange).toBeUndefined();
+  });
+
+  it('removes the method when the comment sits outside the removed text', () => {
+    const { fixer, calls } = makeFixer();
+    const methods = [
+      { name: 'number', node: makeNodeWithRange(0, 10) },
+      { name: 'finite', node: makeNodeWithRange(0, 19) },
+    ];
+    const sourceCode = { getAllComments: () => [{ range: [21, 28] }] } as never;
+
+    buildZodChainRemoveMethodFix({ fixer, methods, removeIndex: 1, sourceCode });
+
+    expect(calls.removeRange).toStrictEqual([10, 19]);
+  });
+
   it('returns null when removeIndex < 1', () => {
     const { fixer } = makeFixer();
     const methods = [{ name: 'number', node: makeNodeWithRange(0, 10) }];

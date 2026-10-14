@@ -34,10 +34,13 @@ function makeCall(
   } as unknown as TSESTree.CallExpression;
 }
 
-function makeSourceCode(textMap: Map<TSESTree.Node, string>): TSESLint.SourceCode {
+function makeSourceCode(
+  textMap: Map<TSESTree.Node, string>,
+  comments: Array<{ range: [number, number] }> = [],
+): TSESLint.SourceCode {
   return {
     getText: (node: TSESTree.Node) => textMap.get(node) ?? '',
-    getAllComments: () => [],
+    getAllComments: () => comments,
   } as unknown as TSESLint.SourceCode;
 }
 
@@ -89,6 +92,52 @@ describe('buildZodChainReplacementFix', () => {
         toMethodName: 'int',
       }),
     ).toBeNull();
+  });
+
+  it('returns null when a comment sits inside the rewritten range: z.number() /* c */ .int()', () => {
+    const zIdent = makeIdent('z');
+    const numberCall = makeCall(makeME(zIdent, 'number'), [], [0, 10]);
+    const intCall = makeCall(makeME(numberCall, 'int'), [], [0, 25]);
+    const { fixer, calls } = makeFixer();
+
+    const fix = buildZodChainReplacementFix({
+      sourceCode: makeSourceCode(new Map([[zIdent, 'z']]), [{ range: [11, 18] }]),
+      fixer,
+      methods: [
+        { name: 'number', node: numberCall },
+        { name: 'int', node: intCall },
+      ],
+      fromIndex: 0,
+      toIndex: 1,
+      toMethodName: 'int',
+    });
+
+    expect(fix).toBeNull();
+    expect(calls.replaceTextRange).toBeUndefined();
+  });
+
+  it('returns null when a receiver is parenthesized: (z.number()).int()', () => {
+    const zIdent = makeIdent('z');
+    const numberCall = makeCall(makeME(zIdent, 'number'), [], [1, 11]);
+    // the member starts at the parenthesis, one character before its object
+    const intMember = { ...makeME(numberCall, 'int'), range: [0, 16] } as TSESTree.MemberExpression;
+    const intCall = makeCall(intMember, [], [0, 18]);
+    const { fixer, calls } = makeFixer();
+
+    const fix = buildZodChainReplacementFix({
+      sourceCode: makeSourceCode(new Map([[zIdent, 'z']])),
+      fixer,
+      methods: [
+        { name: 'number', node: numberCall },
+        { name: 'int', node: intCall },
+      ],
+      fromIndex: 0,
+      toIndex: 1,
+      toMethodName: 'int',
+    });
+
+    expect(fix).toBeNull();
+    expect(calls.replaceTextRange).toBeUndefined();
   });
 
   it('replaces z.number().int() → z.int() (no between methods, no args)', () => {
