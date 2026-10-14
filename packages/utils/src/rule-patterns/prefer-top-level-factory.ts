@@ -9,6 +9,9 @@ import { ZOD_TYPE_CHANGING_METHODS } from '../zod-type-changing-methods.js';
 const REORDER_BARRIERS: ReadonlyArray<string> = [
   ...ZOD_MUTATING_CHECK_NAMES,
   ...ZOD_TYPE_CHANGING_METHODS,
+  // a `.check(fn)` callback may rewrite the value
+  'check',
+  'with',
 ];
 
 /** A deprecated chained method paired with the top-level factory replacing it. */
@@ -42,7 +45,8 @@ export interface PreferTopLevelFactoryOptions<TMessageIds extends string> {
  * The fix rewrites `z.<factory>().<method>(args)` into `z.<replacement>(args)`,
  * keeping the methods in between; it bails on named imports, which would need a new import,
  * on a chain the walker cannot name, on a factory called with arguments,
- * and when a mutating or type-changing method sits in between.
+ * when a mutating or type-changing method or a `.check()` sits in between,
+ * and when another of the deprecated methods is chained too.
  */
 export function buildPreferTopLevelFactoryCreate<
   TMessageIds extends string,
@@ -63,6 +67,7 @@ export function buildPreferTopLevelFactoryCreate<
       ]),
   );
   const sourceMethodNames = Object.keys(replacementBySource);
+  const everySourceMethodName = replacements.map((it) => it.sourceMethodName);
 
   return function create(context) {
     const { sourceCode } = context;
@@ -99,6 +104,16 @@ export function buildPreferTopLevelFactoryCreate<
             if (
               found.methods[0].node.arguments.length > 0 ||
               found.methods.slice(1, found.index).some((it) => REORDER_BARRIERS.includes(it.name))
+            ) {
+              return null;
+            }
+
+            // The replacement may not carry the other deprecated methods: `z.guid().uuid()` throws.
+            if (
+              found.methods.some(
+                (it, index) =>
+                  index > 0 && index !== found.index && everySourceMethodName.includes(it.name),
+              )
             ) {
               return null;
             }

@@ -207,5 +207,23 @@ ruleTester.run(preferTopLevelStringFormats.name, preferTopLevelStringFormats, {
       errors: [{ messageId: 'preferTopLevelStringFormat' }] as const,
       output: null,
     },
+    {
+      name: 'two deprecated formats in one chain — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        z.string().guid().uuid();
+      `,
+      errors: [{ messageId: 'preferTopLevelStringFormat' }],
+      output: null,
+    },
+    {
+      name: 'format after a check callback that may rewrite the value — reported without a fix',
+      code: dedent`
+        import * as z from 'zod';
+        z.string().check((ctx) => { ctx.value = ctx.value.trim(); }).email();
+      `,
+      errors: [{ messageId: 'preferTopLevelStringFormat' }],
+      output: null,
+    },
   ],
 });
