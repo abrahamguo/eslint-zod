@@ -49,6 +49,8 @@ Unlike most `consistent-*` rules, this one is in `recommended` rather than `styl
 - **`namespace`** (default): `import * as z from 'zod/mini'`
 - **`named`**: `import { z } from 'zod/mini'`
 
+There is no `default` syntax: `zod/mini` and `zod/v4-mini` have no default export.
+
 The default is `namespace`, as it avoids named import collisions and makes usage explicit (`z.string()`, `z.object()`, etc.).
 
 ## Examples
@@ -67,7 +69,7 @@ z.object({ name: z.string() });
 ```ts
 import type * as z from 'zod/mini';
 
-type Schema = z.$ZodString;
+type Schema = z.ZodMiniString;
 ```
 
 #### ❌ Invalid
@@ -80,7 +82,7 @@ z.string();
 
 ```ts
 import * as z from 'zod/mini';
-import { $ZodString } from 'zod/mini';
+import { ZodMiniString } from 'zod/mini';
 ```
 
 ### `named`
@@ -97,7 +99,7 @@ z.array(z.number());
 ```ts
 import type { z } from 'zod/mini';
 
-type Schema = z.$ZodArray<z.$ZodNumber>;
+type Schema = z.ZodMiniArray<z.ZodMiniNumber>;
 ```
 
 #### ❌ Invalid
@@ -110,7 +112,7 @@ z.string();
 
 ```ts
 import { z } from 'zod/mini';
-import { $ZodString } from 'zod/mini';
+import { ZodMiniString } from 'zod/mini';
 ```
 
 ## Autofix behavior
@@ -121,6 +123,14 @@ When fixing is applied, the rule will:
 - Remove duplicate Zod Mini imports.
 - Update all Zod Mini usages to use the correct namespace or alias.
 - Preserve `import type` when the file only contains type imports.
+
+The rule reports without fixing when the fix would break the code:
+
+- a named import is re-exported (`export { string }`): `z.string` cannot be exported in place.
+- the alias is shadowed where a usage is (`function get(z: number) { return string; }`).
+- a comment sits inside an import the fix rewrites or removes.
+
+Without an alias of its own, the import is named `z`, or `z1`, `z2`, … when `z` is already taken.
 
 ## Further Reading
 

@@ -81,6 +81,9 @@ There is no 'all' scope — rules in `eslint-plugin-zod` never fire on `zod/mini
 The builder and pattern groups are exposed by a single wildcard exports-map entry each (`./rule-builders/*`, `./rule-patterns/*`), so adding a file is enough — there is no per-file entry to keep in sync. Every file in those directories is therefore public: helpers that are not builders or patterns live at `src/` root instead (e.g. `import-syntax-helpers.ts`, re-exported through `consistent-import`).
 
 `IMPORT_SYNTAXES` and `ImportSyntax` are exported from `@eslint-zod/utils/rule-builders/consistent-import` (not from the root).
+They list every syntax the builder can enforce, not what a plugin offers:
+each plugin declares its own `SYNTAXES` tuple for the schema `enum`.
+When that tuple is a strict subset, it is also the builder's type argument, so `defaultOptions` cannot name a syntax the plugin does not offer.
 
 AST helpers exported from `@eslint-zod/utils`:
 
@@ -213,6 +216,7 @@ A rule is shared when the same file name exists in both plugins' `src/rules/` (t
 
 `eslint-plugin-zod-core` additionally shares `consistent-import` and `consistent-schema-output-type-style` (built from the same rule builders with `zodCoreImportScope`). When updating either of those rules, keep the core counterpart's docs and specs in sync too, adapting examples to `zod/v4/core` imports.
 Core's `consistent-import` offers only the `namespace` syntax: `named` means `import { z }`, and `zod/v4/core` has no `z` export.
+`default` is offered by `eslint-plugin-zod` only: `zod/mini`, `zod/v4-mini` and `zod/v4/core` have no default export.
 
 ## Quality expectations
 

@@ -1,5 +1,6 @@
 import { RuleTester } from '@typescript-eslint/rule-tester';
 import dedent from 'dedent';
+import { describe, expect, it } from 'vitest';
 
 import { consistentImport } from './consistent-import.js';
 
@@ -7,6 +8,10 @@ const ruleTester = new RuleTester();
 
 ruleTester.run(`${consistentImport.name} namespace`, consistentImport, {
   valid: [
+    {
+      name: 'side-effect import',
+      code: 'import "zod/mini";',
+    },
     {
       name: 'namespace import',
       code: 'import * as z from "zod/mini";',
@@ -34,6 +39,210 @@ ruleTester.run(`${consistentImport.name} namespace`, consistentImport, {
   ],
 
   invalid: [
+    {
+      name: 'import inside a declare module block',
+      code: dedent`
+        declare module "my-lib" {
+          import { ZodMiniType } from "zod/mini";
+          export type Schema = ZodMiniType;
+        }
+      `,
+      errors: [
+        { messageId: 'changeImportSyntax', data: { syntax: 'namespace' }, line: 2 },
+        { messageId: 'convertUsage', data: { syntax: 'namespace' }, line: 3 },
+      ],
+      output: dedent`
+        declare module "my-lib" {
+          import * as z from "zod/mini";
+          export type Schema = z.ZodMiniType;
+        }
+      `,
+    },
+    {
+      name: 'fallback alias skips a name already declared',
+      code: dedent`
+        import { string } from "zod/mini";
+        const z = 1;
+        export const value = [string, z];
+      `,
+      errors: [
+        { messageId: 'changeImportSyntax', data: { syntax: 'namespace' } },
+        { messageId: 'convertUsage', data: { syntax: 'namespace' } },
+      ],
+      output: dedent`
+        import * as z1 from "zod/mini";
+        const z = 1;
+        export const value = [z1.string, z];
+      `,
+    },
+    {
+      name: 'alias shadowed where a usage is — no fix',
+      code: dedent`
+        import * as z from "zod/mini";
+        import { string } from "zod/mini";
+        export function get(z: number) {
+          return string;
+        }
+      `,
+      errors: [
+        { messageId: 'removeDuplicate', line: 2 },
+        { messageId: 'convertUsage', data: { syntax: 'namespace' }, line: 4 },
+      ],
+      output: null,
+    },
+    {
+      name: 'comment inside the import — no fix',
+      code: dedent`
+        import { /* keep */ string } from "zod/mini";
+        export const value = string;
+      `,
+      errors: [
+        { messageId: 'changeImportSyntax', data: { syntax: 'namespace' } },
+        { messageId: 'convertUsage', data: { syntax: 'namespace' } },
+      ],
+      output: null,
+    },
+    {
+      name: 'fallback alias skips the alias of another source',
+      code: dedent`
+        import * as z from "zod/mini";
+        import { number } from "zod/v4-mini";
+        export const value = number();
+      `,
+      errors: [
+        { messageId: 'changeImportSyntax', data: { syntax: 'namespace' }, line: 2 },
+        { messageId: 'convertUsage', data: { syntax: 'namespace' }, line: 3 },
+      ],
+      output: dedent`
+        import * as z from "zod/mini";
+        import * as z1 from "zod/v4-mini";
+        export const value = z1.number();
+      `,
+    },
+    {
+      name: 'aliased named import — qualified by its export name',
+      code: dedent`
+        import { string as alias } from "zod/mini";
+        export const value = alias;
+      `,
+      errors: [
+        { messageId: 'changeImportSyntax', data: { syntax: 'namespace' } },
+        { messageId: 'convertUsage', data: { syntax: 'namespace' } },
+      ],
+      output: dedent`
+        import * as z from "zod/mini";
+        export const value = z.string;
+      `,
+    },
+    {
+      name: 'type-only namespace import followed by a value import',
+      code: dedent`
+        import type * as z from "zod/mini";
+        import { string } from "zod/mini";
+        export const value = string;
+      `,
+      errors: [
+        { messageId: 'changeImportSyntax', data: { syntax: 'namespace' }, line: 1 },
+        { messageId: 'removeDuplicate', line: 2 },
+        { messageId: 'convertUsage', data: { syntax: 'namespace' }, line: 3 },
+      ],
+      output: dedent`
+        import * as z from "zod/mini";
+
+        export const value = z.string;
+      `,
+    },
+    {
+      name: 'second namespace import in a shorthand property',
+      code: dedent`
+        import * as z from "zod/mini";
+        import * as y from "zod/mini";
+        export const o = { y };
+      `,
+      errors: [
+        { messageId: 'removeDuplicate', line: 2 },
+        { messageId: 'convertUsage', data: { syntax: 'namespace' }, line: 3 },
+      ],
+      output: dedent`
+        import * as z from "zod/mini";
+
+        export const o = { y: z };
+      `,
+    },
+    {
+      name: 'second namespace import in an export specifier',
+      code: dedent`
+        import * as z from "zod/mini";
+        import * as y from "zod/mini";
+        export { y };
+      `,
+      errors: [
+        { messageId: 'removeDuplicate', line: 2 },
+        { messageId: 'convertUsage', data: { syntax: 'namespace' }, line: 3 },
+      ],
+      output: dedent`
+        import * as z from "zod/mini";
+
+        export { z as y };
+      `,
+    },
+    {
+      name: 'named import in a shorthand property',
+      code: dedent`
+        import { string } from "zod/mini";
+        export const o = { string };
+      `,
+      errors: [
+        { messageId: 'changeImportSyntax', data: { syntax: 'namespace' } },
+        { messageId: 'convertUsage', data: { syntax: 'namespace' } },
+      ],
+      output: dedent`
+        import * as z from "zod/mini";
+        export const o = { string: z.string };
+      `,
+    },
+    {
+      name: 'named import re-exported — no fix, it cannot export a qualified name',
+      code: dedent`
+        import { string } from "zod/mini";
+        export { string };
+      `,
+      errors: [
+        { messageId: 'changeImportSyntax', data: { syntax: 'namespace' } },
+        { messageId: 'convertUsage', data: { syntax: 'namespace' } },
+      ],
+      output: null,
+    },
+    {
+      name: 'duplicate import re-exported — no fix, it cannot export a qualified name',
+      code: dedent`
+        import * as z from "zod/mini";
+        import { string } from "zod/mini";
+        export { string };
+      `,
+      errors: [
+        { messageId: 'removeDuplicate', line: 2 },
+        { messageId: 'convertUsage', data: { syntax: 'namespace' }, line: 3 },
+      ],
+      output: null,
+    },
+    {
+      name: 'two namespace imports',
+      code: dedent`
+        import * as z from "zod/mini";
+        import * as y from "zod/mini";
+        const aSchema = y.string();
+      `,
+      errors: [
+        { messageId: 'removeDuplicate', line: 2 },
+        { messageId: 'convertUsage', data: { syntax: 'namespace' }, line: 3 },
+      ],
+      output: dedent`
+        import * as z from "zod/mini";
+
+        const aSchema = z.string();
+      `,
+    },
     {
       name: 'named import',
       code: dedent`
@@ -74,8 +283,8 @@ ruleTester.run(`${consistentImport.name} namespace`, consistentImport, {
       name: 'named imports with type',
       code: dedent`
         import { z } from "zod/mini";
-        import type { $ZodType } from "zod/mini";
-        const userSchema: $ZodType = z.string();
+        import type { ZodMiniType } from "zod/mini";
+        const userSchema: ZodMiniType = z.string();
       `,
       errors: [
         {
@@ -93,7 +302,7 @@ ruleTester.run(`${consistentImport.name} namespace`, consistentImport, {
       output: dedent`
         import * as z from "zod/mini";
 
-        const userSchema: z.$ZodType = z.string();
+        const userSchema: z.ZodMiniType = z.string();
       `,
     },
     {
@@ -186,4 +395,12 @@ ruleTester.run(`${consistentImport.name} named`, consistentImport, {
       `,
     },
   ],
+});
+
+describe(`${consistentImport.name} options`, () => {
+  it('offers only the syntaxes this plugin supports', () => {
+    expect(consistentImport.meta.schema).toMatchObject([
+      { properties: { syntax: { enum: ['namespace', 'named'] } } },
+    ]);
+  });
 });
