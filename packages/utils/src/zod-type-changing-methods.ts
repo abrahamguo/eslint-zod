@@ -4,11 +4,4 @@
  * so a rule reasoning about a chain must not carry earlier checks past them
  * (`z.string().min(1).array().min(1)` bounds a string, then an array).
  */
-export const ZOD_TYPE_CHANGING_METHODS = Object.freeze([
-  'and',
-  'array',
-  'or',
-  'pipe',
-  'preprocess',
-  'transform',
-]);
+export const ZOD_TYPE_CHANGING_METHODS = Object.freeze(['and', 'array', 'or', 'pipe', 'transform']);
