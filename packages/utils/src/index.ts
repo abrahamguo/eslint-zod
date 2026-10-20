@@ -57,6 +57,7 @@ export { ZOD_STRING_FORMAT_METHODS } from './zod-string-format-methods.js';
 export type { ZodStringFormatMethodName } from './zod-string-format-methods.js';
 export { ZOD_STRING_FORMAT_NAMES } from './zod-string-format-names.js';
 export { ZOD_TYPE_CHANGING_METHODS } from './zod-type-changing-methods.js';
+export type { ZodTypeChangingMethod } from './zod-type-changing-methods.js';
 
 // check vocabulary — canonical names and what each check means
 export { canonicalizeZodConstraintName, getZodCheckDescriptor } from './zod-check-vocabulary.js';
