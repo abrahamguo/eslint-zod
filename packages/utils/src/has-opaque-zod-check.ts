@@ -4,7 +4,7 @@ import type { TSESTree } from '@typescript-eslint/types';
 import type { ZodSchemaConstraint } from './collect-zod-schema-constraints.js';
 
 /** Checks whose callback may rewrite the value. */
-const CALLBACK_CHECK_NAMES: ReadonlySet<string> = new Set<ZodExportName | ZodMethodName>([
+export const CALLBACK_CHECK_NAMES: ReadonlySet<string> = new Set<ZodExportName | ZodMethodName>([
   'check',
   'superRefine',
 ]);

@@ -1,10 +1,11 @@
-import type { ZodExportName, ZodIsoMemberName, ZodMethodName } from '@eslint-zod/tooling/zod-api';
+import type { ZodExportName, ZodIsoMemberName } from '@eslint-zod/tooling/zod-api';
 import type { TSESTree } from '@typescript-eslint/types';
 import { AST_NODE_TYPES } from '@typescript-eslint/types';
 
 import type { ZodSchemaConstraint } from '../collect-zod-schema-constraints.js';
 import { getZodSchemaBaseType } from '../get-zod-schema-base-type.js';
 import type { ZodSchemaBaseType } from '../get-zod-schema-base-type.js';
+import { CALLBACK_CHECK_NAMES } from '../has-opaque-zod-check.js';
 import { isZodFactoryChainItem } from '../is-zod-factory-chain-item.js';
 import type { RuleContext, RuleListener } from '../rule-types.js';
 import type { ZodCheckDescriptor, ZodCheckDomain } from '../zod-check-vocabulary.js';
@@ -12,12 +13,6 @@ import { canonicalizeZodConstraintName, getZodCheckDescriptor } from '../zod-che
 import type { ZodImportScope } from '../zod-import-scope.js';
 import { ZOD_MUTATING_CHECK_NAMES } from '../zod-mutating-check-names.js';
 import { ZOD_TYPE_CHANGING_METHODS } from '../zod-type-changing-methods.js';
-
-/** Checks whose callback may rewrite the value. */
-const CALLBACK_CHECK_NAMES: ReadonlySet<string> = new Set<ZodExportName | ZodMethodName>([
-  'check',
-  'superRefine',
-]);
 
 /** Options contract implemented by each plugin's rule. */
 export interface NoConflictingChecksOptions {

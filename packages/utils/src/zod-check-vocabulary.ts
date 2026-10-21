@@ -53,7 +53,7 @@ const ISO_FORMAT_NAMES = ZOD_STRING_FORMAT_METHODS.map(
 ).filter((name) => name.startsWith('iso.'));
 
 /** A canonical check name: a standalone check, a chained-only spelling (`nonempty`) or an `iso.*` member. */
-type CanonicalCheckName = ZodExportName | ZodIsoMemberName | ZodMethodName;
+type CanonicalCheckName = ZodExportName | ZodIsoMemberName | ('nonempty' & ZodMethodName);
 
 /** The checks with a meaning of their own; the string formats are added below. */
 const CHECK_DESCRIPTOR_ENTRIES: ReadonlyArray<readonly [CanonicalCheckName, ZodCheckDescriptor]> = [
@@ -137,33 +137,34 @@ const CHECK_DESCRIPTORS = new Map<string, ZodCheckDescriptor>([
   ]),
 ]);
 
+/** Checks spelled the same chained (`.gte()`) and standalone (`z.gte()`). */
+const SAME_SPELLING_CHECKS: ReadonlyArray<ZodMethodName & CanonicalCheckName> = [
+  'gt',
+  'gte',
+  'lt',
+  'lte',
+  'positive',
+  'negative',
+  'nonnegative',
+  'nonpositive',
+  'multipleOf',
+  'int',
+  'includes',
+  'startsWith',
+  'endsWith',
+  'lowercase',
+  'uppercase',
+  'regex',
+  'nonempty',
+];
+
 /**
  * Chained (`zod`) spellings whose canonical name does not depend on the base
  * type. `step` is the deprecated spelling of `multipleOf`; the rest are spelled
  * the same either way.
  */
 const CHAINED_COMMON: ReadonlyArray<readonly [ZodMethodName, CanonicalCheckName]> = [
-  ...(
-    [
-      'gt',
-      'gte',
-      'lt',
-      'lte',
-      'positive',
-      'negative',
-      'nonnegative',
-      'nonpositive',
-      'multipleOf',
-      'int',
-      'includes',
-      'startsWith',
-      'endsWith',
-      'lowercase',
-      'uppercase',
-      'regex',
-      'nonempty',
-    ] as const
-  ).map((name): [ZodMethodName, CanonicalCheckName] => [name, name]),
+  ...SAME_SPELLING_CHECKS.map((name) => [name, name] as const),
   ['step', 'multipleOf'],
 ];
 

@@ -22,14 +22,7 @@ export type ZodSchemaBaseType =
   | 'unknown'
   | 'never';
 
-/** The factories mapped one by one; the format and numeric sub-type tables are spread below. */
-const FACTORY_BASE_TYPES: ReadonlyArray<readonly [ZodExportName, ZodSchemaBaseType]> = [
-  ['string', 'string'],
-  // the `iso` namespace stands for its member factories (`z.iso.date()`)
-  ['iso', 'string'],
-  ['number', 'number'],
-  ['bigint', 'bigint'],
-
+const OTHER_FACTORY_BASE_TYPES: ReadonlyArray<readonly [ZodExportName, ZodSchemaBaseType]> = [
   // booleans — `stringbool` parses a string INPUT but outputs a boolean,
   // and checks run against the output
   ['boolean', 'boolean'],
@@ -49,11 +42,21 @@ const FACTORY_BASE_TYPES: ReadonlyArray<readonly [ZodExportName, ZodSchemaBaseTy
 ];
 
 const BASE_TYPES = new Map<string, ZodSchemaBaseType>([
-  ...FACTORY_BASE_TYPES,
-  // every top-level format factory parses to `string`, every numeric sub-type to its family
+  // strings — `string` itself, the `iso` namespace (member factories such as `z.iso.date()`),
+  // and every top-level format factory, which all parse to `string`.
+  ['string' satisfies ZodExportName, 'string'],
+  ['iso' satisfies ZodExportName, 'string'],
   ...ZOD_STRING_FORMAT_NAMES.map((name): [string, ZodSchemaBaseType] => [name, 'string']),
+
+  // numbers
+  ['number' satisfies ZodExportName, 'number'],
   ...ZOD_NUMBER_SUBTYPE_NAMES.map((name): [string, ZodSchemaBaseType] => [name, 'number']),
+
+  // bigints
+  ['bigint' satisfies ZodExportName, 'bigint'],
   ...ZOD_BIGINT_SUBTYPE_NAMES.map((name): [string, ZodSchemaBaseType] => [name, 'bigint']),
+
+  ...OTHER_FACTORY_BASE_TYPES,
 ]);
 
 /** Every name {@link getZodSchemaBaseType} maps, including the `iso` namespace. */

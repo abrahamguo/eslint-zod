@@ -3,9 +3,7 @@ import type { ZodExportName } from '@eslint-zod/tooling/zod-api';
 import { ZOD_BIGINT_SUBTYPE_NAMES, ZOD_NUMBER_SUBTYPE_NAMES } from './zod-numeric-subtype-names.js';
 import { ZOD_STRING_FORMAT_NAMES } from './zod-string-format-names.js';
 
-/** The immutable factories beyond the sub-type and format tables spread below. */
 const SCALAR_FACTORY_NAMES: ReadonlyArray<ZodExportName> = [
-  // primitives / scalars
   'bigint',
   'boolean',
   'date',
@@ -21,9 +19,6 @@ const SCALAR_FACTORY_NAMES: ReadonlyArray<ZodExportName> = [
   'templateLiteral',
   'undefined',
   'void',
-
-  // `iso` covers member factories such as `z.iso.date()`
-  'iso',
 ];
 
 /**
@@ -37,6 +32,7 @@ const SCALAR_FACTORY_NAMES: ReadonlyArray<ZodExportName> = [
  * `readonly` is meaningful there.
  */
 export const ZOD_IMMUTABLE_SCHEMA_TYPES: ReadonlyArray<string> = Object.freeze([
+  // primitives / scalars
   ...SCALAR_FACTORY_NAMES,
 
   // number and bigint sub-types — spread for the same reason as the string formats below
@@ -47,4 +43,7 @@ export const ZOD_IMMUTABLE_SCHEMA_TYPES: ReadonlyArray<string> = Object.freeze([
   // hand-copied, so a new format cannot be added to one table and forgotten
   // in the other
   ...ZOD_STRING_FORMAT_NAMES,
+
+  // `iso` covers member factories such as `z.iso.date()`
+  'iso' satisfies ZodExportName,
 ]);
